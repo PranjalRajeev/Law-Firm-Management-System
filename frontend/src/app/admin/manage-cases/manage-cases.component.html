@@ -1,0 +1,128 @@
+<div class="cases-container">
+  <div class="page-header">
+    <div>
+      <h1>Manage Cases</h1>
+      <p>Create, edit, assign and track all legal cases.</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreateDialog()">
+      <mat-icon>add</mat-icon> New Case
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search cases...</mat-label>
+          <input matInput [(ngModel)]="searchText" (ngModelChange)="applyFilter()">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="status-filter">
+          <mat-label>Filter by Status</mat-label>
+          <mat-select [(ngModel)]="filterStatus" (ngModelChange)="applyFilter()">
+            <mat-option value="">All Statuses</mat-option>
+            <mat-option *ngFor="let s of caseStatuses" [value]="s">{{ s }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button (click)="searchText=''; filterStatus=''; applyFilter()">
+          <mat-icon>clear</mat-icon> Clear
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Cases Table -->
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div *ngIf="isLoading" class="loading">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <div *ngIf="!isLoading" class="table-container">
+        <table mat-table [dataSource]="filteredCases">
+
+          <ng-container matColumnDef="caseNumber">
+            <th mat-header-cell *matHeaderCellDef>Case #</th>
+            <td mat-cell *matCellDef="let c">
+              <span class="case-number">{{ c.caseNumber }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Title</th>
+            <td mat-cell *matCellDef="let c">
+              <div class="case-title">{{ c.title }}</div>
+              <div class="case-desc">{{ c.description | slice:0:50 }}{{ c.description?.length > 50 ? '...' : '' }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="client">
+            <th mat-header-cell *matHeaderCellDef>Client</th>
+            <td mat-cell *matCellDef="let c">{{ c.clientName || '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="lawyer">
+            <th mat-header-cell *matHeaderCellDef>Lawyer</th>
+            <td mat-cell *matCellDef="let c">
+              <span *ngIf="c.lawyerName">{{ c.lawyerName }}</span>
+              <span *ngIf="!c.lawyerName" class="unassigned">Unassigned</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let c">
+              <span class="type-badge">{{ c.caseType || '—' }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let c">
+              <span class="status-badge" [style.background-color]="getStatusColor(c.status)">
+                {{ c.status }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="dateOpened">
+            <th mat-header-cell *matHeaderCellDef>Opened</th>
+            <td mat-cell *matCellDef="let c">{{ c.dateOpened | date:'mediumDate' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let c">
+              <button mat-icon-button color="primary"
+                      (click)="openEditDialog(c)"
+                      matTooltip="Edit Case">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="accent"
+                      (click)="openAssignDialog(c)"
+                      matTooltip="Assign Lawyer">
+                <mat-icon>person_add</mat-icon>
+              </button>
+              <button mat-icon-button color="warn"
+                      (click)="deleteCase(c.id)"
+                      matTooltip="Delete Case">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <div *ngIf="filteredCases.length === 0" class="no-data">
+          <mat-icon>gavel</mat-icon>
+          <p>No cases found. Click "New Case" to create one.</p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

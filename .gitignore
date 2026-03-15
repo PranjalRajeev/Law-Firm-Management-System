@@ -1,0 +1,23 @@
+# Angular
+node_modules/
+frontend/node_modules
+dist/
+.angular/
+coverage/
+
+# Spring Boot / Maven
+target/
+*.jar
+*.war
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,15 @@
+<div class="lawyer-layout">
+  <header class="lawyer-header">
+    <mat-toolbar class="toolbar">
+      <span class="toolbar-title">Lawyer Dashboard</span>
+      <span class="toolbar-spacer"></span>
+      <button mat-icon-button (click)="logout()">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </mat-toolbar>
+  </header>
+
+  <main class="lawyer-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

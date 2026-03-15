@@ -1,0 +1,258 @@
+<div class="dashboard-container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Admin Dashboard</h1>
+    <p>Welcome back! Here's what's happening at your firm.</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <mat-card class="stat-card blue">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-info">
+            <p class="stat-label">Total Users</p>
+            <h2 class="stat-value">{{ stats.totalUsers }}</h2>
+          </div>
+          <mat-icon class="stat-icon">people</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card green">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-info">
+            <p class="stat-label">Total Lawyers</p>
+            <h2 class="stat-value">{{ stats.totalLawyers }}</h2>
+          </div>
+          <mat-icon class="stat-icon">badge</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card purple">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-info">
+            <p class="stat-label">Total Clients</p>
+            <h2 class="stat-value">{{ stats.totalClients }}</h2>
+          </div>
+          <mat-icon class="stat-icon">person</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card orange">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-info">
+            <p class="stat-label">Total Cases</p>
+            <h2 class="stat-value">{{ stats.totalCases }}</h2>
+          </div>
+          <mat-icon class="stat-icon">gavel</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card teal">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-info">
+            <p class="stat-label">Open Cases</p>
+            <h2 class="stat-value">{{ stats.openCases }}</h2>
+          </div>
+          <mat-icon class="stat-icon">folder_open</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card red">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-info">
+            <p class="stat-label">In Progress</p>
+            <h2 class="stat-value">{{ stats.inProgressCases }}</h2>
+          </div>
+          <mat-icon class="stat-icon">pending</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Case Status Summary -->
+  <div class="section-row">
+    <mat-card class="case-status-card">
+      <mat-card-header>
+        <mat-card-title>Case Status Overview</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="status-bars">
+          <div class="status-bar-item">
+            <span class="status-label">Open</span>
+            <div class="bar-container">
+              <div class="bar open"
+                [style.width.%]="stats.totalCases > 0 ? (stats.openCases / stats.totalCases * 100) : 0">
+              </div>
+            </div>
+            <span class="status-count">{{ stats.openCases }}</span>
+          </div>
+          <div class="status-bar-item">
+            <span class="status-label">In Progress</span>
+            <div class="bar-container">
+              <div class="bar in-progress"
+                [style.width.%]="stats.totalCases > 0 ? (stats.inProgressCases / stats.totalCases * 100) : 0">
+              </div>
+            </div>
+            <span class="status-count">{{ stats.inProgressCases }}</span>
+          </div>
+          <div class="status-bar-item">
+            <span class="status-label">Closed</span>
+            <div class="bar-container">
+              <div class="bar closed"
+                [style.width.%]="stats.totalCases > 0 ? (stats.closedCases / stats.totalCases * 100) : 0">
+              </div>
+            </div>
+            <span class="status-count">{{ stats.closedCases }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Users Table -->
+  <mat-card class="table-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>people</mat-icon> User Management
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+      <div *ngIf="!isLoading" class="table-container">
+        <table mat-table [dataSource]="users" class="mat-elevation-z0">
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let user">
+              <div class="user-cell">
+                <div class="avatar">
+                  {{ user.firstName?.charAt(0) }}{{ user.lastName?.charAt(0) }}
+                </div>
+                <div>
+                  <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+                  <div class="user-username">{{ user.username }}</div>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef>Role</th>
+            <td mat-cell *matCellDef="let user">
+              <span class="role-badge" [class]="getRoleBadgeColor(user.roles)">
+                {{ getRoleDisplay(user.roles) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let user">
+              <span class="status-badge"
+                    [class.active]="user.status === 'ACTIVE'"
+                    [class.inactive]="user.status !== 'ACTIVE'">
+                {{ user.status }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let user">
+              <button mat-icon-button color="warn"
+                      (click)="deleteUser(user.id)"
+                      matTooltip="Delete User">
+                <mat-icon>delete</mat-icon>
+              </button>
+              <button mat-icon-button color="primary"
+                      (click)="updateUserStatus(user.id, user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE')"
+                      matTooltip="Toggle Status">
+                <mat-icon>{{ user.status === 'ACTIVE' ? 'block' : 'check_circle' }}</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedUserColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedUserColumns;"></tr>
+        </table>
+        <p *ngIf="users.length === 0" class="no-data">No users found.</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Cases Table -->
+  <mat-card class="table-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>gavel</mat-icon> Recent Cases
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="cases" class="mat-elevation-z0">
+
+          <ng-container matColumnDef="caseNumber">
+            <th mat-header-cell *matHeaderCellDef>Case #</th>
+            <td mat-cell *matCellDef="let item">{{ item.caseNumber }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Title</th>
+            <td mat-cell *matCellDef="let item">{{ item.title }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="client">
+            <th mat-header-cell *matHeaderCellDef>Client</th>
+            <td mat-cell *matCellDef="let item">{{ item.clientName || 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="lawyer">
+            <th mat-header-cell *matHeaderCellDef>Lawyer</th>
+            <td mat-cell *matCellDef="let item">{{ item.lawyerName || 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="case-status-badge"
+                    [style.background-color]="getStatusColor(item.status)">
+                {{ item.status }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="dateOpened">
+            <th mat-header-cell *matHeaderCellDef>Opened</th>
+            <td mat-cell *matCellDef="let item">
+              {{ item.dateOpened | date:'mediumDate' }}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedCaseColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedCaseColumns;"></tr>
+        </table>
+        <p *ngIf="cases.length === 0" class="no-data">No cases found.</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+</div>

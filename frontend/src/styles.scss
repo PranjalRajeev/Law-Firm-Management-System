@@ -1,0 +1,133 @@
+/* Global Styles */
+@import '~@angular/material/prebuilt-themes/indigo-pink.css';
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.mat-toolbar.mat-primary {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+}
+
+.mat-card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.mat-button, .mat-raised-button, .mat-stroked-button {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.mat-form-field-appearance-outline .mat-form-field-outline {
+  border-radius: 6px;
+}
+
+/* Landing page specific styles */
+.landing-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section {
+  position: relative;
+  z-index: 2;
+  color: white;
+  text-align: center;
+  padding: 100px 20px;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-subtitle {
+  font-size: 1.5rem;
+  margin-bottom: 40px;
+  opacity: 0.9;
+}
+
+.cta-button {
+  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+  color: white;
+  padding: 15px 40px;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(238, 90, 36, 0.6);
+}
+
+/* Three.js canvas styles */
+#three-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Dashboard styles */
+.dashboard-container {
+  padding: 20px;
+}
+
+.stats-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.stats-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e3c72;
+  margin-bottom: 8px;
+}
+
+.stats-label {
+  font-size: 1rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .dashboard-container {
+    padding: 10px;
+  }
+}

@@ -1,0 +1,167 @@
+<div class="analytics-container">
+  <div class="page-header">
+    <h1>Analytics</h1>
+    <p>Overview of your law firm's performance and statistics.</p>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-icon blue"><mat-icon>people</mat-icon></div>
+        <div class="summary-info">
+          <h2>{{ stats.totalUsers || 0 }}</h2>
+          <p>Total Users</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-icon green"><mat-icon>gavel</mat-icon></div>
+        <div class="summary-info">
+          <h2>{{ stats.totalCases || 0 }}</h2>
+          <p>Total Cases</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-icon purple"><mat-icon>badge</mat-icon></div>
+        <div class="summary-info">
+          <h2>{{ stats.totalLawyers || 0 }}</h2>
+          <p>Total Lawyers</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-icon orange"><mat-icon>person</mat-icon></div>
+        <div class="summary-info">
+          <h2>{{ stats.totalClients || 0 }}</h2>
+          <p>Total Clients</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="charts-grid">
+    <!-- Users by Role -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Users by Role</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="bar-chart">
+          <div *ngFor="let item of usersByRole" class="bar-row">
+            <span class="bar-label">{{ item.label }}</span>
+            <div class="bar-track">
+              <div class="bar-fill"
+                   [style.width.%]="getBarWidth(item.value, getMaxValue(usersByRole))"
+                   [style.background-color]="item.color">
+              </div>
+            </div>
+            <span class="bar-value">{{ item.value }}</span>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <div *ngFor="let item of usersByRole" class="legend-item">
+            <span class="legend-dot" [style.background-color]="item.color"></span>
+            <span>{{ item.label }}: {{ item.value }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Cases by Status -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Cases by Status</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="bar-chart">
+          <div *ngFor="let item of casesByStatus" class="bar-row">
+            <span class="bar-label">{{ item.label }}</span>
+            <div class="bar-track">
+              <div class="bar-fill"
+                   [style.width.%]="getBarWidth(item.value, getMaxValue(casesByStatus))"
+                   [style.background-color]="item.color">
+              </div>
+            </div>
+            <span class="bar-value">{{ item.value }}</span>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <div *ngFor="let item of casesByStatus" class="legend-item">
+            <span class="legend-dot" [style.background-color]="item.color"></span>
+            <span>{{ item.label }}: {{ item.value }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Cases by Type -->
+    <mat-card class="chart-card full-width">
+      <mat-card-header>
+        <mat-card-title>Cases by Type</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="casesByType.length === 0" class="no-data">
+          No cases yet. Cases will appear here once added.
+        </div>
+        <div class="bar-chart" *ngIf="casesByType.length > 0">
+          <div *ngFor="let item of casesByType" class="bar-row">
+            <span class="bar-label">{{ item.label }}</span>
+            <div class="bar-track">
+              <div class="bar-fill"
+                   [style.width.%]="getBarWidth(item.value, getMaxValue(casesByType))"
+                   [style.background-color]="item.color">
+              </div>
+            </div>
+            <span class="bar-value">{{ item.value }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Recent Activity -->
+    <mat-card class="chart-card full-width">
+      <mat-card-header>
+        <mat-card-title>Recent Users</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <table mat-table [dataSource]="users.slice(0,5)" class="analytics-table">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let u">{{ u.firstName }} {{ u.lastName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+          </ng-container>
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef>Role</th>
+            <td mat-cell *matCellDef="let u">
+              <span class="role-chip">
+                {{ u.roles?.includes('ROLE_ADMIN') ? 'Admin' : u.roles?.includes('ROLE_LAWYER') ? 'Lawyer' : 'Client' }}
+              </span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let u">
+              <span [class.active-badge]="u.status === 'ACTIVE'"
+                    [class.inactive-badge]="u.status !== 'ACTIVE'">
+                {{ u.status }}
+              </span>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="['name','email','role','status']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['name','email','role','status'];"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

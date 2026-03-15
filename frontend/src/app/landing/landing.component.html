@@ -1,0 +1,39 @@
+<div class="landing-container">
+  <canvas #threeCanvas id="three-canvas"></canvas>
+  
+  <div class="hero-section">
+    <h1 class="hero-title">Law Firm Management System</h1>
+    <p class="hero-subtitle">Streamline your legal practice with modern case management</p>
+    
+    <div class="cta-buttons">
+      <button class="cta-button" (click)="navigateToLogin()">Login</button>
+      <button class="cta-button secondary" (click)="navigateToRegister()">Register</button>
+    </div>
+    
+    <div class="features">
+      <div class="feature-card">
+        <mat-icon class="feature-icon">gavel</mat-icon>
+        <h3>Case Management</h3>
+        <p>Organize and track all your legal cases efficiently</p>
+      </div>
+      
+      <div class="feature-card">
+        <mat-icon class="feature-icon">people</mat-icon>
+        <h3>Client Management</h3>
+        <p>Manage client information and communication seamlessly</p>
+      </div>
+      
+      <div class="feature-card">
+        <mat-icon class="feature-icon">description</mat-icon>
+        <h3>Document Management</h3>
+        <p>Store and organize legal documents securely</p>
+      </div>
+      
+      <div class="feature-card">
+        <mat-icon class="feature-icon">schedule</mat-icon>
+        <h3>Scheduling</h3>
+        <p>Track court dates and appointments</p>
+      </div>
+    </div>
+  </div>
+</div>

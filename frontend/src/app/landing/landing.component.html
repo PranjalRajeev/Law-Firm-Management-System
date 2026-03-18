@@ -1,39 +1,232 @@
-<div class="landing-container">
-  <canvas #threeCanvas id="three-canvas"></canvas>
-  
-  <div class="hero-section">
-    <h1 class="hero-title">Law Firm Management System</h1>
-    <p class="hero-subtitle">Streamline your legal practice with modern case management</p>
-    
-    <div class="cta-buttons">
-      <button class="cta-button" (click)="navigateToLogin()">Login</button>
-      <button class="cta-button secondary" (click)="navigateToRegister()">Register</button>
+<div class="landing-wrapper">
+
+  <!-- ── Navbar ── -->
+  <nav class="navbar" [class.scrolled]="isScrolled" [class.hidden]="navHidden">
+    <div class="nav-inner">
+      <a class="logo" href="#">
+        <span class="logo-mark">L</span>
+        <span class="logo-text">ex<em>Firma</em></span>
+      </a>
+      <div class="nav-links">
+        <a href="#features"      class="nav-link">Practice</a>
+        <a href="#testimonials"  class="nav-link">Counsel</a>
+        <a href="#contact"       class="nav-link">Chambers</a>
+        <button class="btn-outline" (click)="navigateToLogin()">Sign In</button>
+        <button class="btn-gold"    (click)="navigateToRegister()">Request Access</button>
+      </div>
+      <button class="hamburger" (click)="mobileOpen = !mobileOpen" [class.open]="mobileOpen">
+        <span></span><span></span><span></span>
+      </button>
     </div>
-    
-    <div class="features">
-      <div class="feature-card">
-        <mat-icon class="feature-icon">gavel</mat-icon>
-        <h3>Case Management</h3>
-        <p>Organize and track all your legal cases efficiently</p>
+    <div class="mobile-menu" [class.open]="mobileOpen">
+      <a href="#features"     (click)="mobileOpen=false">Practice</a>
+      <a href="#testimonials" (click)="mobileOpen=false">Counsel</a>
+      <a href="#contact"      (click)="mobileOpen=false">Chambers</a>
+      <button class="btn-gold full" (click)="navigateToRegister(); mobileOpen=false">Request Access</button>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero" id="home">
+    <div class="hero-bg">
+      <div class="hero-overlay"></div>
+      <img
+        src="https://images.unsplash.com/photo-1575505586569-646b2ca898fc?w=1600&q=85&fit=crop"
+        alt="Law firm"
+        class="hero-img"
+      />
+    </div>
+    <div class="hero-body">
+      <div class="hero-eyebrow">
+        <span class="rule"></span>
+        <span>Established for the Modern Practitioner</span>
+        <span class="rule"></span>
       </div>
-      
-      <div class="feature-card">
-        <mat-icon class="feature-icon">people</mat-icon>
-        <h3>Client Management</h3>
-        <p>Manage client information and communication seamlessly</p>
+      <h1 class="hero-headline">
+        Where Counsel<br>
+        <em>Meets Precision</em>
+      </h1>
+      <p class="hero-sub">
+        The complete management system built for law firms that refuse to compromise —
+        on client experience, case integrity, or firm efficiency.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-gold large" (click)="navigateToRegister()">Begin Your Trial</button>
+        <button class="btn-ghost large" (click)="scrollTo('features')">
+          Explore the Platform
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
       </div>
-      
-      <div class="feature-card">
-        <mat-icon class="feature-icon">description</mat-icon>
-        <h3>Document Management</h3>
-        <p>Store and organize legal documents securely</p>
-      </div>
-      
-      <div class="feature-card">
-        <mat-icon class="feature-icon">schedule</mat-icon>
-        <h3>Scheduling</h3>
-        <p>Track court dates and appointments</p>
+      <div class="hero-trust">
+        <span>Trusted by</span>
+        <strong>500+ firms</strong>
+        <span class="dot">·</span>
+        <strong>50,000+ cases managed</strong>
+        <span class="dot">·</span>
+        <strong>99.9% uptime</strong>
       </div>
     </div>
+    <div class="hero-scroll-cue" (click)="scrollTo('features')">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ── Divider ── -->
+  <div class="section-divider">
+    <span class="divider-seal">⚖</span>
   </div>
+
+  <!-- ── Features ── -->
+  <section class="features-section" id="features">
+    <div class="section-header">
+      <p class="overline">The Platform</p>
+      <h2>Everything Your Firm<br><em>Needs to Prevail</em></h2>
+      <p class="section-lead">
+        Built from the ground up for legal professionals — every feature
+        reflects how the best firms actually work.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <article class="feature-card" *ngFor="let f of features; let i = index"
+               [style.animation-delay]="(i * 80) + 'ms'">
+        <div class="card-number">{{ (i + 1).toString().padStart(2,'0') }}</div>
+        <div class="card-icon">{{ f.icon }}</div>
+        <h3>{{ f.title }}</h3>
+        <p>{{ f.description }}</p>
+        <div class="card-rule"></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ── Showcase ── -->
+  <section class="showcase-section">
+    <div class="showcase-image">
+      <img
+        src="https://images.unsplash.com/photo-1521791055366-0d553872952f?w=900&q=85&fit=crop"
+        alt="Attorneys reviewing documents"
+      />
+      <div class="showcase-badge">
+        <span class="badge-num">15+</span>
+        <span class="badge-label">Years of<br>Legal Expertise</span>
+      </div>
+    </div>
+    <div class="showcase-content">
+      <p class="overline">Why LexFirma</p>
+      <h2>Designed Around<br><em>How Law Firms Work</em></h2>
+      <p>
+        Most practice management tools are built by software companies.
+        LexFirma was designed in partnership with practicing attorneys —
+        every workflow, every screen, every shortcut reflects real courtroom
+        and chamber experience.
+      </p>
+      <ul class="showcase-list">
+        <li *ngFor="let p of pillars">
+          <span class="list-icon">{{ p.icon }}</span>
+          <div>
+            <strong>{{ p.title }}</strong>
+            <span>{{ p.desc }}</span>
+          </div>
+        </li>
+      </ul>
+      <button class="btn-gold" (click)="navigateToRegister()">See It in Action</button>
+    </div>
+  </section>
+
+  <!-- ── Stats ── -->
+  <section class="stats-section">
+    <div class="stats-inner">
+      <div class="stat-item" *ngFor="let s of stats">
+        <span class="stat-value">{{ s.value }}</span>
+        <span class="stat-label">{{ s.label }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Testimonials ── -->
+  <section class="testimonials-section" id="testimonials">
+    <div class="section-header light">
+      <p class="overline">In Their Words</p>
+      <h2>Voices from<br><em>the Bench & Bar</em></h2>
+    </div>
+    <div class="testimonials-track">
+      <article class="testimonial-card" *ngFor="let t of testimonials">
+        <div class="quote-mark">"</div>
+        <p class="quote-text">{{ t.quote }}</p>
+        <div class="testimonial-footer">
+          <img [src]="t.avatar" [alt]="t.name" class="t-avatar" />
+          <div class="t-meta">
+            <strong>{{ t.name }}</strong>
+            <span>{{ t.role }}</span>
+            <span class="t-firm">{{ t.firm }}</span>
+          </div>
+          <div class="t-stars">★★★★★</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="cta-section" id="cta">
+    <div class="cta-bg">
+      <img
+        src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1400&q=80&fit=crop"
+        alt="Legal desk"
+      />
+      <div class="cta-overlay"></div>
+    </div>
+    <div class="cta-body">
+      <p class="overline">Begin Today</p>
+      <h2>Your Firm Deserves<br><em>Better Tools</em></h2>
+      <p>Start a 30-day free trial. No credit card required. Full access from day one.</p>
+      <div class="cta-form" [class.success]="ctaSuccess">
+        <div class="form-row" *ngIf="!ctaSuccess">
+          <input
+            type="email"
+            [(ngModel)]="ctaEmail"
+            placeholder="firm@yourlawfirm.com"
+            class="cta-input"
+          />
+          <button class="btn-gold large" (click)="handleCta()">Request Access</button>
+        </div>
+        <div class="success-msg" *ngIf="ctaSuccess">
+          <span class="success-icon">✓</span>
+          <span>We'll be in touch within one business day.</span>
+        </div>
+      </div>
+      <p class="cta-fine">By submitting, you agree to our Terms of Service and Privacy Policy.</p>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="footer" id="contact">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="logo" href="#">
+          <span class="logo-mark">L</span>
+          <span class="logo-text">ex<em>Firma</em></span>
+        </a>
+        <p>The management platform built for firms that hold themselves to a higher standard.</p>
+        <div class="social-row">
+          <a href="#" class="social-btn" aria-label="LinkedIn">in</a>
+          <a href="#" class="social-btn" aria-label="Twitter">𝕏</a>
+          <a href="#" class="social-btn" aria-label="Facebook">f</a>
+        </div>
+      </div>
+      <div class="footer-col" *ngFor="let col of footerCols">
+        <h4>{{ col.title }}</h4>
+        <ul>
+          <li *ngFor="let link of col.links">
+            <a href="#">{{ link }}</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024 LexFirma. All rights reserved.</span>
+      <span class="footer-tagline">Justice. Precision. Excellence.</span>
+    </div>
+  </footer>
+
 </div>

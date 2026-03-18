@@ -2,6 +2,8 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
+// ── Material (kept for manage-cases, analytics, and snackbar) ─────────────────
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,11 +26,12 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+// ── Components ────────────────────────────────────────────────────────────────
 import { AdminLayoutComponent } from './layout/admin-layout.component';
 import { AdminDashboardComponent } from './dashboard/admin-dashboard.component';
 import { AnalyticsComponent } from './analytics/analytics.component';
 import { ManageCasesComponent, CaseDialogComponent, AssignLawyerDialogComponent } from './manage-cases/manage-cases.component';
-import { ManageUsersComponent, UserDialogComponent } from './manage-users/manage-users.component';
+import { ManageUsersComponent } from './manage-users/manage-users.component'; // UserDialogComponent removed — now inline
 
 @NgModule({
   declarations: [
@@ -38,8 +41,8 @@ import { ManageUsersComponent, UserDialogComponent } from './manage-users/manage
     ManageCasesComponent,
     CaseDialogComponent,
     AssignLawyerDialogComponent,
-    ManageUsersComponent,
-    UserDialogComponent
+    ManageUsersComponent
+    // UserDialogComponent removed — dialog is now inline in manage-users template
   ],
   imports: [
     CommonModule,
@@ -50,13 +53,11 @@ import { ManageUsersComponent, UserDialogComponent } from './manage-users/manage
         path: '',
         component: AdminLayoutComponent,
         children: [
-          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          { path: '',          redirectTo: 'dashboard', pathMatch: 'full' },
           { path: 'dashboard', component: AdminDashboardComponent },
           { path: 'analytics', component: AnalyticsComponent },
-          { path: 'cases', component: ManageCasesComponent },
-          { path: 'users', component: ManageUsersComponent },
-          { path: 'lawyers', component: ManageUsersComponent },
-          { path: 'clients', component: ManageUsersComponent },
+          { path: 'cases',     component: ManageCasesComponent },
+          { path: 'users',     component: ManageUsersComponent },
         ]
       }
     ]),

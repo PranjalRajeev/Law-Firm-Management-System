@@ -1,56 +1,70 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { environment } from '../../../environments/environment';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────────────────────────────────────
 @Component({
   selector: 'app-manage-cases',
   templateUrl: './manage-cases.component.html',
   styleUrls: ['./manage-cases.component.scss']
 })
 export class ManageCasesComponent implements OnInit {
-  cases: any[] = [];
+
+  // ── Data ────────────────────────────────────────────────────────────────────
+  cases:         any[] = [];
   filteredCases: any[] = [];
-  lawyers: any[] = [];
-  clients: any[] = [];
+  lawyers:       any[] = [];
+  clients:       any[] = [];
   isLoading = true;
-  searchText = '';
+
+  // ── Filters ─────────────────────────────────────────────────────────────────
+  searchText   = '';
   filterStatus = '';
 
-  displayedColumns = ['caseNumber', 'title', 'client', 'lawyer', 'type', 'status', 'dateOpened', 'actions'];
-
+  // ── Reference lists ──────────────────────────────────────────────────────────
   caseStatuses = ['OPEN', 'IN_PROGRESS', 'CLOSED', 'SETTLED', 'DISMISSED', 'APPEALED'];
-  caseTypes = ['CRIMINAL', 'CIVIL', 'FAMILY', 'CORPORATE', 'REAL_ESTATE', 'IMMIGRATION', 'TAX', 'LABOR', 'INTELLECTUAL_PROPERTY', 'OTHER'];
+  caseTypes    = ['CRIMINAL', 'CIVIL', 'FAMILY', 'CORPORATE', 'REAL_ESTATE',
+                  'IMMIGRATION', 'TAX', 'LABOR', 'INTELLECTUAL_PROPERTY', 'OTHER'];
+
+  // ── Case modal state ─────────────────────────────────────────────────────────
+  caseDialogOpen    = false;
+  caseDialogMode:   'create' | 'edit' = 'create';
+  caseDialogLoading = false;
+  editingCase:      any = null;
+  caseForm!:        FormGroup;
+
+  // ── Assign lawyer modal state ─────────────────────────────────────────────────
+  assignDialogOpen  = false;
+  assigningCase:    any = null;
+  selectedLawyerId: number | null = null;
 
   constructor(
-    private http: HttpClient,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private http:     HttpClient,
+    private snackBar: MatSnackBar,
+    private fb:       FormBuilder
   ) {}
 
-  ngOnInit(): void {
-    this.loadData();
-  }
+  ngOnInit(): void { this.loadData(); }
 
+  // ── HTTP helper ───────────────────────────────────────────────────────────────
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('authToken');
     return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
   }
 
+  // ── Load ──────────────────────────────────────────────────────────────────────
   loadData(): void {
     this.isLoading = true;
     const headers = this.getHeaders();
 
     this.http.get<any[]>(`${environment.apiUrl}/admin/cases`, { headers })
       .subscribe({
-        next: (data) => {
-          this.cases = data;
-          this.filteredCases = data;
-          this.isLoading = false;
-        },
-        error: (err) => { console.error(err); this.isLoading = false; }
+        next: (data) => { this.cases = data; this.filteredCases = data; this.isLoading = false; },
+        error: (err)  => { console.error(err); this.isLoading = false; }
       });
 
     this.http.get<any[]>(`${environment.apiUrl}/admin/users/role/ROLE_LAWYER`, { headers })
@@ -60,92 +74,122 @@ export class ManageCasesComponent implements OnInit {
       .subscribe({ next: (data) => this.clients = data });
   }
 
+  // ── Filter ────────────────────────────────────────────────────────────────────
   applyFilter(): void {
     this.filteredCases = this.cases.filter(c => {
-      const matchesSearch = !this.searchText ||
-        c.title?.toLowerCase().includes(this.searchText.toLowerCase()) ||
-        c.caseNumber?.toLowerCase().includes(this.searchText.toLowerCase()) ||
-        c.clientName?.toLowerCase().includes(this.searchText.toLowerCase()) ||
-        c.lawyerName?.toLowerCase().includes(this.searchText.toLowerCase());
+      const s = this.searchText.toLowerCase();
+      const matchesSearch = !s ||
+        c.title?.toLowerCase().includes(s)      ||
+        c.caseNumber?.toLowerCase().includes(s) ||
+        c.clientName?.toLowerCase().includes(s) ||
+        c.lawyerName?.toLowerCase().includes(s);
 
       const matchesStatus = !this.filterStatus || c.status === this.filterStatus;
-
       return matchesSearch && matchesStatus;
     });
   }
 
-  openCreateDialog(): void {
-    const ref = this.dialog.open(CaseDialogComponent, {
-      width: '700px',
-      maxHeight: '90vh',
-      data: { mode: 'create', lawyers: this.lawyers, clients: this.clients }
+  // ── Case modal ────────────────────────────────────────────────────────────────
+  private buildCaseForm(c?: any): void {
+    this.caseForm = this.fb.group({
+      caseNumber:      [c?.caseNumber      || '', Validators.required],
+      title:           [c?.title           || '', Validators.required],
+      description:     [c?.description     || ''],
+      caseType:        [c?.caseType        || ''],
+      status:          [c?.status          || 'OPEN'],
+      feesCharged:     [c?.feesCharged     || null],
+      clientId:        [c?.clientId        ?? null],
+      lawyerId:        [c?.lawyerId        ?? null],
+      courtName:       [c?.courtName       || ''],
+      judgeName:       [c?.judgeName       || ''],
+      opposingCounsel: [c?.opposingCounsel || '']
     });
+  }
 
-    ref.afterClosed().subscribe(result => {
-      if (result) this.createCase(result);
-    });
+  openCreateDialog(): void {
+    this.caseDialogMode = 'create';
+    this.editingCase    = null;
+    this.buildCaseForm();
+    this.caseDialogOpen = true;
   }
 
   openEditDialog(caseItem: any): void {
-    const ref = this.dialog.open(CaseDialogComponent, {
-      width: '700px',
-      maxHeight: '90vh',
-      data: { mode: 'edit', case: caseItem, lawyers: this.lawyers, clients: this.clients }
-    });
-
-    ref.afterClosed().subscribe(result => {
-      if (result) this.updateCase(caseItem.id, result);
-    });
+    this.caseDialogMode = 'edit';
+    this.editingCase    = caseItem;
+    this.buildCaseForm(caseItem);
+    this.caseDialogOpen = true;
   }
 
+  closeCaseDialog(): void { this.caseDialogOpen = false; }
+
+  submitCaseDialog(): void {
+    if (this.caseForm.invalid) { this.caseForm.markAllAsTouched(); return; }
+
+    if (this.caseDialogMode === 'create') {
+      this.createCase(this.caseForm.value);
+    } else {
+      this.updateCase(this.editingCase.id, this.caseForm.value);
+    }
+  }
+
+  // ── Assign lawyer modal ───────────────────────────────────────────────────────
   openAssignDialog(caseItem: any): void {
-    const ref = this.dialog.open(AssignLawyerDialogComponent, {
-      width: '400px',
-      data: { case: caseItem, lawyers: this.lawyers }
-    });
-
-    ref.afterClosed().subscribe(lawyerId => {
-      if (lawyerId) this.assignLawyer(caseItem.id, lawyerId);
-    });
+    this.assigningCase    = caseItem;
+    this.selectedLawyerId = caseItem.lawyerId ?? null;
+    this.assignDialogOpen = true;
   }
 
+  closeAssignDialog(): void { this.assignDialogOpen = false; }
+
+  submitAssign(): void {
+    if (!this.selectedLawyerId || !this.assigningCase) return;
+    this.assignLawyer(this.assigningCase.id, this.selectedLawyerId);
+    this.assignDialogOpen = false;
+  }
+
+  // ── CRUD ──────────────────────────────────────────────────────────────────────
   createCase(data: any): void {
-    const headers = this.getHeaders();
-    this.http.post<any>(`${environment.apiUrl}/admin/cases`, data, { headers })
+    this.caseDialogLoading = true;
+    this.http.post<any>(`${environment.apiUrl}/admin/cases`, data, { headers: this.getHeaders() })
       .subscribe({
         next: (newCase) => {
           this.cases.unshift(newCase);
           this.applyFilter();
+          this.caseDialogLoading = false;
+          this.caseDialogOpen    = false;
           this.snackBar.open('Case created successfully!', 'Close', { duration: 3000 });
         },
         error: (err) => {
-          console.error(err);
+          this.caseDialogLoading = false;
           this.snackBar.open('Failed to create case.', 'Close', { duration: 3000 });
+          console.error(err);
         }
       });
   }
 
   updateCase(id: number, data: any): void {
-    const headers = this.getHeaders();
-    this.http.put<any>(`${environment.apiUrl}/admin/cases/${id}`, data, { headers })
+    this.caseDialogLoading = true;
+    this.http.put<any>(`${environment.apiUrl}/admin/cases/${id}`, data, { headers: this.getHeaders() })
       .subscribe({
         next: (updated) => {
-          const index = this.cases.findIndex(c => c.id === id);
-          if (index !== -1) this.cases[index] = updated;
+          const i = this.cases.findIndex(c => c.id === id);
+          if (i !== -1) this.cases[i] = updated;
           this.applyFilter();
+          this.caseDialogLoading = false;
+          this.caseDialogOpen    = false;
           this.snackBar.open('Case updated successfully!', 'Close', { duration: 3000 });
         },
         error: (err) => {
-          console.error(err);
+          this.caseDialogLoading = false;
           this.snackBar.open('Failed to update case.', 'Close', { duration: 3000 });
+          console.error(err);
         }
       });
   }
 
   deleteCase(id: number): void {
     if (!confirm('Are you sure you want to delete this case?')) return;
-    const headers = this.getHeaders();
-    this.http.delete(`${environment.apiUrl}/admin/cases/${id}`, { headers })
+    this.http.delete(`${environment.apiUrl}/admin/cases/${id}`, { headers: this.getHeaders() })
       .subscribe({
         next: () => {
           this.cases = this.cases.filter(c => c.id !== id);
@@ -157,192 +201,52 @@ export class ManageCasesComponent implements OnInit {
   }
 
   assignLawyer(caseId: number, lawyerId: number): void {
-    const headers = this.getHeaders();
-    this.http.put<any>(`${environment.apiUrl}/admin/cases/${caseId}/assign-lawyer/${lawyerId}`, {}, { headers })
-      .subscribe({
-        next: (updated) => {
-          const index = this.cases.findIndex(c => c.id === caseId);
-          if (index !== -1) this.cases[index] = updated;
-          this.applyFilter();
-          this.snackBar.open('Lawyer assigned!', 'Close', { duration: 3000 });
-        },
-        error: (err) => console.error(err)
-      });
-  }
-
-  getStatusColor(status: string): string {
-    switch (status) {
-      case 'OPEN': return '#43a047';
-      case 'IN_PROGRESS': return '#1976d2';
-      case 'CLOSED': return '#757575';
-      case 'SETTLED': return '#fb8c00';
-      case 'DISMISSED': return '#e53935';
-      case 'APPEALED': return '#8e24aa';
-      default: return '#757575';
-    }
-  }
-}
-
-// ─── Case Dialog Component ────────────────────────────────────────────────────
-@Component({
-  selector: 'app-case-dialog',
-  template: `
-    <h2 mat-dialog-title>{{ data.mode === 'create' ? 'Create New Case' : 'Edit Case' }}</h2>
-    <mat-dialog-content>
-      <form [formGroup]="form" class="dialog-form">
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="half">
-            <mat-label>Case Number</mat-label>
-            <input matInput formControlName="caseNumber" placeholder="e.g. CASE-2024-001">
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="half">
-            <mat-label>Case Type</mat-label>
-            <mat-select formControlName="caseType">
-              <mat-option *ngFor="let t of caseTypes" [value]="t">{{ t }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Title</mat-label>
-          <input matInput formControlName="title" placeholder="Case title">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Description</mat-label>
-          <textarea matInput formControlName="description" rows="3" placeholder="Case description"></textarea>
-        </mat-form-field>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="half">
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              <mat-option *ngFor="let s of caseStatuses" [value]="s">{{ s }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="half">
-            <mat-label>Fees Charged</mat-label>
-            <input matInput type="number" formControlName="feesCharged" placeholder="0.00">
-            <span matPrefix>₹ </span>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="half">
-            <mat-label>Assign Client</mat-label>
-            <mat-select formControlName="clientId">
-              <mat-option [value]="null">-- None --</mat-option>
-              <mat-option *ngFor="let c of data.clients" [value]="c.id">
-                {{ c.firstName }} {{ c.lastName }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="half">
-            <mat-label>Assign Lawyer</mat-label>
-            <mat-select formControlName="lawyerId">
-              <mat-option [value]="null">-- None --</mat-option>
-              <mat-option *ngFor="let l of data.lawyers" [value]="l.id">
-                {{ l.firstName }} {{ l.lastName }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="half">
-            <mat-label>Court Name</mat-label>
-            <input matInput formControlName="courtName">
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="half">
-            <mat-label>Judge Name</mat-label>
-            <input matInput formControlName="judgeName">
-          </mat-form-field>
-        </div>
-
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Opposing Counsel</mat-label>
-          <input matInput formControlName="opposingCounsel">
-        </mat-form-field>
-      </form>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="dialogRef.close()">Cancel</button>
-      <button mat-raised-button color="primary"
-              (click)="submit()"
-              [disabled]="form.invalid">
-        {{ data.mode === 'create' ? 'Create' : 'Update' }}
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [`
-    .dialog-form { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
-    .form-row { display: flex; gap: 12px; }
-    .half { flex: 1; }
-    .full { width: 100%; }
-    mat-dialog-content { max-height: 65vh; overflow-y: auto; }
-  `]
-})
-export class CaseDialogComponent {
-  form: FormGroup;
-  caseStatuses = ['OPEN', 'IN_PROGRESS', 'CLOSED', 'SETTLED', 'DISMISSED', 'APPEALED'];
-  caseTypes = ['CRIMINAL', 'CIVIL', 'FAMILY', 'CORPORATE', 'REAL_ESTATE', 'IMMIGRATION', 'TAX', 'LABOR', 'INTELLECTUAL_PROPERTY', 'OTHER'];
-
-  constructor(
-    public dialogRef: MatDialogRef<CaseDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
-    private fb: FormBuilder
-  ) {
-    this.form = this.fb.group({
-      caseNumber: [data.case?.caseNumber || '', Validators.required],
-      title: [data.case?.title || '', Validators.required],
-      description: [data.case?.description || ''],
-      caseType: [data.case?.caseType || ''],
-      status: [data.case?.status || 'OPEN'],
-      feesCharged: [data.case?.feesCharged || null],
-      clientId: [data.case?.clientId || null],
-      lawyerId: [data.case?.lawyerId || null],
-      courtName: [data.case?.courtName || ''],
-      judgeName: [data.case?.judgeName || ''],
-      opposingCounsel: [data.case?.opposingCounsel || '']
+    this.http.put<any>(
+      `${environment.apiUrl}/admin/cases/${caseId}/assign-lawyer/${lawyerId}`,
+      {},
+      { headers: this.getHeaders() }
+    ).subscribe({
+      next: (updated) => {
+        const i = this.cases.findIndex(c => c.id === caseId);
+        if (i !== -1) this.cases[i] = updated;
+        this.applyFilter();
+        this.snackBar.open('Lawyer assigned!', 'Close', { duration: 3000 });
+      },
+      error: (err) => console.error(err)
     });
   }
 
-  submit(): void {
-    if (this.form.valid) {
-      this.dialogRef.close(this.form.value);
+  // ── Display helper ────────────────────────────────────────────────────────────
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'OPEN':        return '#4EB87A';
+      case 'IN_PROGRESS': return '#6FA3D4';
+      case 'CLOSED':      return '#6B6560';
+      case 'SETTLED':     return '#C9A84C';
+      case 'DISMISSED':   return '#d46060';
+      case 'APPEALED':    return '#b09ddd';
+      default:            return '#6B6560';
     }
   }
 }
 
-// ─── Assign Lawyer Dialog ─────────────────────────────────────────────────────
-@Component({
-  selector: 'app-assign-lawyer-dialog',
-  template: `
-    <h2 mat-dialog-title>Assign Lawyer</h2>
-    <mat-dialog-content>
-      <p>Case: <strong>{{ data.case.title }}</strong></p>
-      <mat-form-field appearance="outline" style="width:100%">
-        <mat-label>Select Lawyer</mat-label>
-        <mat-select [(ngModel)]="selectedLawyerId">
-          <mat-option *ngFor="let l of data.lawyers" [value]="l.id">
-            {{ l.firstName }} {{ l.lastName }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="dialogRef.close()">Cancel</button>
-      <button mat-raised-button color="primary"
-              (click)="dialogRef.close(selectedLawyerId)"
-              [disabled]="!selectedLawyerId">
-        Assign
-      </button>
-    </mat-dialog-actions>
-  `
-})
-export class AssignLawyerDialogComponent {
-  selectedLawyerId: number | null = null;
+// ─────────────────────────────────────────────────────────────────────────────
+// Stub classes kept so admin.module.ts declarations compile without changes.
+// These are empty shells — all UI is now inline in the main component template.
+// ─────────────────────────────────────────────────────────────────────────────
+import { Component as Comp, Inject } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
+@Comp({ selector: 'app-case-dialog', template: '' })
+export class CaseDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<CaseDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {}
+}
+
+@Comp({ selector: 'app-assign-lawyer-dialog', template: '' })
+export class AssignLawyerDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<AssignLawyerDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any

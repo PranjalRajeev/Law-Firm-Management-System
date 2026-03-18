@@ -1,166 +1,535 @@
-.register-container {
+// ─────────────────────────────────────────────────────────────────────────────
+// LexFirma — Register Page
+// Dark Luxury Editorial Theme · with industry-level validation UI
+// ─────────────────────────────────────────────────────────────────────────────
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+$ink:           #0D0C0A;
+$ink-soft:      #1A1916;
+$parchment:     #F5F0E8;
+$parchment-mid: #EDE7D9;
+$gold:          #C9A84C;
+$gold-light:    #E2C47A;
+$gold-dark:     #A8852E;
+$ivory:         #FAF8F4;
+$muted:         #7A7469;
+$muted-light:   #ABA49A;
+$border:        rgba(201, 168, 76, 0.18);
+$border-dark:   rgba(201, 168, 76, 0.08);
+
+$valid-color:   #2d7a4f;
+$valid-bg:      rgba(45, 122, 79, 0.06);
+$error-color:   #b83232;
+$error-bg:      rgba(184, 50, 50, 0.06);
+
+// Strength palette
+$sw1: #d9534f;   // very weak — red
+$sw2: #e07b34;   // weak     — orange
+$sw3: #d4a017;   // fair     — amber
+$sw4: #5a9e4b;   // strong   — green
+$sw5: #2d7a4f;   // very strong — deep green
+
+$ease:     cubic-bezier(0.4, 0, 0.2, 1);
+$ease-out: cubic-bezier(0.0, 0, 0.2, 1);
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
+*, *::before, *::after { box-sizing: border-box; }
+
+// ── Layout ────────────────────────────────────────────────────────────────────
+.register-wrapper {
+  position: relative;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.register-card {
+// ── Background ─────────────────────────────────────────────────────────────────
+.register-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: $ivory;
+}
+
+.register-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 30%, rgba($gold, .06) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 30% 80%, rgba($ink, .04) 0%, transparent 70%);
+}
+
+.bg-grain {
+  position: absolute;
+  inset: 0;
+  opacity: .025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+}
+
+// ── Left panel ────────────────────────────────────────────────────────────────
+.register-panel {
+  position: relative;
+  z-index: 2;
+  background: $ink;
+  border-right: 1px solid rgba($gold, .15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 1px; height: 100%;
+    background: linear-gradient(to bottom, transparent, rgba($gold, .4) 40%, rgba($gold, .15) 70%, transparent);
+  }
+}
+
+.panel-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 3.5rem 3rem;
+}
+
+// ── Logo ──────────────────────────────────────────────────────────────────────
+.logo {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  text-decoration: none;
+  flex-shrink: 0;
+
+  .logo-mark {
+    width: 34px; height: 34px;
+    background: $gold;
+    color: $ink;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 3px; flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem; font-weight: 700;
+    color: $parchment; letter-spacing: .01em;
+    em { font-style: italic; color: $gold; }
+  }
+}
+
+.logo-mobile { display: none; }
+
+// ── Panel quote ───────────────────────────────────────────────────────────────
+.panel-quote {
+  margin: auto 0;
+  padding: 2rem 0;
+
+  .quote-rule {
+    display: block; width: 32px; height: 2px;
+    background: $gold; margin-bottom: 1.75rem; opacity: .7;
+  }
+
+  blockquote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem; font-style: italic; font-weight: 400;
+    color: rgba($parchment, .75); line-height: 1.65;
+    margin: 0 0 1.25rem;
+  }
+
+  cite {
+    font-size: .78rem; font-style: normal; font-weight: 500;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: $gold; opacity: .7;
+  }
+}
+
+// ── Panel features ────────────────────────────────────────────────────────────
+.panel-features {
+  list-style: none; padding: 0;
+  margin: 0 0 3rem;
+  display: flex; flex-direction: column; gap: 1rem;
+  border-top: 1px solid rgba($gold, .1); padding-top: 2rem;
+
+  li {
+    display: flex; align-items: center; gap: .875rem;
+    font-size: .875rem; color: rgba($parchment, .5);
+  }
+
+  .pf-icon { font-size: 1rem; opacity: .7; flex-shrink: 0; }
+}
+
+.panel-footer-seal .seal-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: .75rem; letter-spacing: .25em;
+  text-transform: uppercase; color: rgba($gold, .3);
+}
+
+// ── Right form section ────────────────────────────────────────────────────────
+.register-form-section {
+  position: relative;
+  z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  padding: 3rem 2rem;
+  overflow-y: auto;
+}
+
+.register-form-inner {
   width: 100%;
   max-width: 500px;
+  animation: fadeUp .8s $ease-out both;
 }
 
-mat-card {
-  border-radius: 15px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+// ── Heading ───────────────────────────────────────────────────────────────────
+.form-heading {
+  margin-bottom: 2.5rem;
+
+  .overline {
+    display: block; font-size: .72rem; font-weight: 600;
+    letter-spacing: .2em; text-transform: uppercase;
+    color: $gold; margin-bottom: .75rem;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 4vw, 3rem);
+    font-weight: 700; line-height: 1.1;
+    color: $ink; margin: 0 0 1rem;
+    em { font-style: italic; color: $gold-dark; }
+  }
+
+  .form-subtext {
+    font-size: .9rem; color: $muted;
+    line-height: 1.65; max-width: 420px;
+  }
 }
 
-.register-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #1e3c72;
-  text-align: center;
-  margin-bottom: 10px;
+// ── Error banner (server errors) ──────────────────────────────────────────────
+.error-banner {
+  display: flex; align-items: center; gap: .75rem;
+  background: $error-bg;
+  border: 1px solid rgba($error-color, .2);
+  border-left: 3px solid $error-color;
+  border-radius: 3px;
+  padding: .875rem 1rem;
+  margin-bottom: 1.75rem;
+  font-size: .875rem; color: $error-color;
+
+  .error-icon {
+    width: 20px; height: 20px;
+    background: $error-color; color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .7rem; font-weight: 700; flex-shrink: 0;
+  }
 }
 
-mat-card-subtitle {
-  text-align: center;
-  color: #666;
-  margin-bottom: 20px;
+// ── Form layout ───────────────────────────────────────────────────────────────
+.lf-form {
+  display: flex; flex-direction: column;
 }
 
-.form-row {
+.field-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+
+.lf-field {
+  display: flex; flex-direction: column;
+  margin-bottom: 1.375rem;
+}
+
+.lf-label {
+  font-size: .72rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: $muted; margin-bottom: .5rem;
+}
+
+// ── Input wrapper ─────────────────────────────────────────────────────────────
+.lf-input-wrap {
+  position: relative;
+  display: flex; align-items: center;
+
+  // Error state
+  &.has-error .lf-input {
+    border-color: rgba($error-color, .5);
+    background: $error-bg;
+    &:focus {
+      border-color: $error-color;
+      box-shadow: 0 0 0 3px rgba($error-color, .08);
+    }
+  }
+
+  // Valid state
+  &.is-valid .lf-input {
+    border-color: rgba($valid-color, .4);
+    background: $valid-bg;
+    &:focus {
+      border-color: $valid-color;
+      box-shadow: 0 0 0 3px rgba($valid-color, .08);
+    }
+  }
+}
+
+// ── Field status icon (✓ / ✕) ────────────────────────────────────────────────
+.field-status-icon {
+  position: absolute;
+  right: .875rem;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+
+  .icon-ok  { color: $valid-color; }
+  .icon-err { color: $error-color; }
+}
+
+// ── Input ─────────────────────────────────────────────────────────────────────
+.lf-input {
+  width: 100%;
+  padding: .8rem 2.5rem .8rem 1.1rem;  // right padding for icon
+  background: $ivory;
+  border: 1px solid rgba($ink, .15);
+  border-radius: 3px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .9rem; font-weight: 400;
+  color: $ink;
+  appearance: none;
+  transition: border-color .2s $ease, box-shadow .2s $ease, background .2s $ease;
+
+  &::placeholder { color: $muted-light; }
+
+  &:focus {
+    outline: none;
+    border-color: $gold;
+    box-shadow: 0 0 0 3px rgba($gold, .1);
+  }
+}
+
+// ── Password field ────────────────────────────────────────────────────────────
+.lf-input-password .lf-input {
+  padding-right: 3rem;  // room for the eye button
+}
+
+.visibility-btn {
+  position: absolute; right: .875rem;
+  background: none; border: none;
+  cursor: pointer; color: $muted-light;
+  padding: .25rem;
+  display: flex; align-items: center;
+  transition: color .2s $ease;
+  &:hover { color: $gold; }
+}
+
+// ── Select ────────────────────────────────────────────────────────────────────
+.lf-select { cursor: pointer; padding-right: 2.5rem; }
+
+.select-arrow {
+  position: absolute; right: .875rem;
+  pointer-events: none; color: $muted-light;
+  display: flex; align-items: center;
+}
+
+// ── Inline error text ─────────────────────────────────────────────────────────
+.lf-error {
+  font-size: .72rem; color: $error-color;
+  margin-top: .35rem; letter-spacing: .02em;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Password Strength Bar
+// ─────────────────────────────────────────────────────────────────────────────
+.pw-strength-bar-wrap {
   display: flex;
-  gap: 15px;
+  align-items: center;
+  gap: .75rem;
+  margin-top: .625rem;
 }
 
-.form-field {
-  margin-bottom: 15px;
-}
-
-.half-width {
+.pw-strength-segments {
+  display: flex;
+  gap: 4px;
   flex: 1;
 }
 
-.full-width {
-  width: 100%;
+.seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba($ink, .1);
+  transition: background .3s $ease;
+
+  // Colour classes applied dynamically
+  &.active {
+    &.strength-1 { background: $sw1; }
+    &.strength-2 { background: $sw2; }
+    &.strength-3 { background: $sw3; }
+    &.strength-4 { background: $sw4; }
+    &.strength-5 { background: $sw5; }
+  }
 }
 
-.error-message {
-  color: #f44336;
-  background: rgba(244, 67, 54, 0.1);
-  padding: 10px 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
+.pw-strength-label {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color .3s $ease;
+
+  &.strength-1 { color: $sw1; }
+  &.strength-2 { color: $sw2; }
+  &.strength-3 { color: $sw3; }
+  &.strength-4 { color: $sw4; }
+  &.strength-5 { color: $sw5; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Password Rules Checklist
+// ─────────────────────────────────────────────────────────────────────────────
+.pw-rules {
+  list-style: none;
+  padding: .75rem 1rem;
+  margin: .5rem 0 0;
+  background: rgba($ink, .03);
+  border: 1px solid $border-dark;
+  border-radius: 3px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .4rem .5rem;
+}
+
+.pw-rules li {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-
-  mat-icon {
-    font-size: 18px;
-    height: 18px;
-    width: 18px;
-  }
-}
-
-.form-actions {
-  margin-top: 30px;
-  text-align: center;
-}
-
-.register-button {
-  width: 100%;
-  padding: 12px;
-  font-size: 1.1rem;
+  gap: .4rem;
+  font-size: .72rem;
   font-weight: 500;
-  background: linear-gradient(45deg, #1e3c72, #2a5298);
-  color: white;
-  border-radius: 8px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  letter-spacing: .02em;
+  transition: color .2s $ease;
+
+  &.rule-pass { color: $valid-color; }
+  &.rule-fail { color: $muted-light; }
 }
 
-.register-button:hover:not([disabled]) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(30, 60, 114, 0.4);
-}
+.rule-icon {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background .2s $ease;
 
-.register-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.loading-span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.additional-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px;
-  text-align: center;
-}
-
-.link-button {
-  color: #1e3c72;
-  font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.link-button:hover {
-  color: #2a5298;
-  background-color: rgba(30, 60, 114, 0.1);
-}
-
-mat-spinner {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-@media (max-width: 600px) {
-  .register-container {
-    padding: 10px;
+  .rule-pass & {
+    background: rgba($valid-color, .12);
+    color: $valid-color;
   }
 
-  .register-card {
-    max-width: 100%;
-  }
-
-  mat-card {
-    border-radius: 10px;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .register-title {
-    font-size: 1.5rem;
+  .rule-fail & {
+    background: rgba($ink, .06);
+    color: $muted-light;
   }
 }
 
-::ng-deep .mat-form-field-appearance-outline .mat-form-field-outline {
-  border-radius: 8px;
+// ─────────────────────────────────────────────────────────────────────────────
+// Submit Button
+// ─────────────────────────────────────────────────────────────────────────────
+.btn-gold {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  gap: .5rem;
+  background: $gold;
+  color: $ink;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .875rem; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  border-radius: 3px; border: none;
+  cursor: pointer;
+  transition: background .25s $ease, transform .2s $ease, box-shadow .25s $ease;
+
+  &.large { padding: .9rem 2.25rem; font-size: .9rem; }
+  &.full  { width: 100%; margin-top: .75rem; }
+
+  &:hover:not(:disabled) {
+    background: $gold-light;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba($gold, .35);
+  }
+
+  &:active:not(:disabled) { transform: translateY(0); }
+
+  &:disabled { opacity: .45; cursor: not-allowed; }
 }
 
-::ng-deep .mat-form-field-appearance-outline.mat-focused .mat-form-field-outline-thick {
-  color: #1e3c72;
+.btn-label { display: inline-flex; align-items: center; gap: .5rem; }
+
+.btn-spinner { display: inline-flex; align-items: center; gap: .625rem; }
+
+.spinner-ring {
+  width: 16px; height: 16px;
+  border: 2px solid rgba($ink, .25);
+  border-top-color: $ink;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
 }
 
-::ng-deep .mat-form-field-appearance-outline .mat-form-field-label {
-  color: #666;
+// ── Footer links ──────────────────────────────────────────────────────────────
+.form-footer {
+  margin-top: 2rem;
+  display: flex; align-items: center; justify-content: center;
+  gap: .625rem; flex-wrap: wrap;
+  font-size: .8rem; color: $muted;
+
+  .footer-dot { color: $muted-light; }
 }
 
-::ng-deep .mat-form-field-appearance-outline.mat-focused .mat-form-field-label {
-  color: #1e3c72;
+.text-link {
+  background: none; border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .8rem; font-weight: 600;
+  color: $gold-dark; padding: 0;
+  transition: color .2s $ease;
+  &:hover { color: $gold; }
+}
+
+// ── Keyframes ─────────────────────────────────────────────────────────────────
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 900px) {
+  .register-wrapper {
+    grid-template-columns: 1fr;
+    min-height: 100dvh;
+  }
+
+  .register-panel { display: none; }
+
+  .register-form-section {
+    padding: 2.5rem 1.5rem;
+    align-items: flex-start;
+    padding-top: 3rem;
+  }
+
+  .logo-mobile {
+    display: flex;
+    margin-bottom: 2rem;
+    .logo-text { color: $ink; em { color: $gold-dark; } }
+  }
+}
+
+@media (max-width: 540px) {
+  .field-row { grid-template-columns: 1fr; gap: 0; }
+  .form-heading h1 { font-size: 2.2rem; }
+  .pw-rules { grid-template-columns: 1fr; }
 }

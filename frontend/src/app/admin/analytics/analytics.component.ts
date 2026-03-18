@@ -8,20 +8,19 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['./analytics.component.scss']
 })
 export class AnalyticsComponent implements OnInit {
+
   stats: any = {};
   users: any[] = [];
   cases: any[] = [];
 
-  // Chart data
+  // Chart data arrays
   casesByStatus: any[] = [];
-  casesByType: any[] = [];
-  usersByRole: any[] = [];
+  casesByType:   any[] = [];
+  usersByRole:   any[] = [];
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit(): void {
-    this.loadData();
-  }
+  ngOnInit(): void { this.loadData(); }
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('authToken');
@@ -33,51 +32,51 @@ export class AnalyticsComponent implements OnInit {
 
     this.http.get<any>(`${environment.apiUrl}/admin/dashboard/stats`, { headers })
       .subscribe({
-        next: (data) => {
-          this.stats = data;
-          this.buildChartData();
-        },
-        error: (err) => console.error('Stats error:', err)
+        next:  (data) => { this.stats = data; this.buildChartData(); },
+        error: (err)  => console.error('Stats error:', err)
       });
 
     this.http.get<any[]>(`${environment.apiUrl}/admin/users`, { headers })
       .subscribe({
-        next: (data) => { this.users = data; },
-        error: (err) => console.error('Users error:', err)
+        next:  (data) => { this.users = data; },
+        error: (err)  => console.error('Users error:', err)
       });
 
     this.http.get<any[]>(`${environment.apiUrl}/admin/cases`, { headers })
       .subscribe({
-        next: (data) => {
-          this.cases = data;
-          this.buildCaseCharts();
-        },
-        error: (err) => console.error('Cases error:', err)
+        next:  (data) => { this.cases = data; this.buildCaseCharts(); },
+        error: (err)  => console.error('Cases error:', err)
       });
   }
 
   buildChartData(): void {
+    const admins = Math.max(
+      0,
+      (this.stats.totalUsers || 0) - (this.stats.totalLawyers || 0) - (this.stats.totalClients || 0)
+    );
+
     this.usersByRole = [
-      { label: 'Admins', value: this.stats.totalUsers - this.stats.totalLawyers - this.stats.totalClients, color: '#e53935' },
-      { label: 'Lawyers', value: this.stats.totalLawyers, color: '#1976d2' },
-      { label: 'Clients', value: this.stats.totalClients, color: '#8e24aa' }
+      { label: 'Admins',  value: admins,                       color: '#d46060' },
+      { label: 'Lawyers', value: this.stats.totalLawyers || 0, color: '#6FA3D4' },
+      { label: 'Clients', value: this.stats.totalClients || 0, color: '#b09ddd' }
     ];
 
     this.casesByStatus = [
-      { label: 'Open', value: this.stats.openCases, color: '#43a047' },
-      { label: 'In Progress', value: this.stats.inProgressCases, color: '#1976d2' },
-      { label: 'Closed', value: this.stats.closedCases, color: '#757575' }
+      { label: 'Open',        value: this.stats.openCases        || 0, color: '#4EB87A' },
+      { label: 'In Progress', value: this.stats.inProgressCases  || 0, color: '#6FA3D4' },
+      { label: 'Closed',      value: this.stats.closedCases      || 0, color: '#6B6560' }
     ];
   }
 
   buildCaseCharts(): void {
-    const typeCounts: any = {};
+    const typeCounts: Record<string, number> = {};
     this.cases.forEach(c => {
       const type = c.caseType || 'OTHER';
       typeCounts[type] = (typeCounts[type] || 0) + 1;
     });
 
-    const colors = ['#1976d2', '#43a047', '#e53935', '#fb8c00', '#8e24aa', '#00897b'];
+    // Colours aligned with the LexFirma palette
+    const colors = ['#C9A84C', '#4EB87A', '#6FA3D4', '#d46060', '#b09ddd', '#E2C47A', '#ABA49A'];
     this.casesByType = Object.keys(typeCounts).map((key, i) => ({
       label: key,
       value: typeCounts[key],
@@ -86,7 +85,7 @@ export class AnalyticsComponent implements OnInit {
   }
 
   getBarWidth(value: number, max: number): number {
-    if (max === 0) return 0;
+    if (!max || max === 0) return 0;
     return Math.round((value / max) * 100);
   }
 

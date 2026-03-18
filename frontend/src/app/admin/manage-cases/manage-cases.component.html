@@ -1,128 +1,338 @@
-<div class="cases-container">
-  <div class="page-header">
-    <div>
-      <h1>Manage Cases</h1>
-      <p>Create, edit, assign and track all legal cases.</p>
+<div class="cases-wrapper">
+
+  <!-- ── Page Header ────────────────────────────────────────────────────────── -->
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <span class="overline">Case Registry</span>
+      <h1>Manage <em>Cases</em></h1>
+      <p class="dash-subtitle">Create, edit, assign and track all legal cases.</p>
     </div>
-    <button mat-raised-button color="primary" (click)="openCreateDialog()">
-      <mat-icon>add</mat-icon> New Case
+    <button class="btn-gold" (click)="openCreateDialog()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      New Case
     </button>
   </div>
 
-  <!-- Filters -->
-  <mat-card class="filter-card">
-    <mat-card-content>
-      <div class="filters">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Search cases...</mat-label>
-          <input matInput [(ngModel)]="searchText" (ngModelChange)="applyFilter()">
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
+  <!-- ── Filters ────────────────────────────────────────────────────────────── -->
+  <div class="filter-bar">
+    <div class="filter-search">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="filter-input" type="text"
+             placeholder="Search by title, case number, client, lawyer…"
+             [(ngModel)]="searchText" (ngModelChange)="applyFilter()" />
+    </div>
 
-        <mat-form-field appearance="outline" class="status-filter">
-          <mat-label>Filter by Status</mat-label>
-          <mat-select [(ngModel)]="filterStatus" (ngModelChange)="applyFilter()">
-            <mat-option value="">All Statuses</mat-option>
-            <mat-option *ngFor="let s of caseStatuses" [value]="s">{{ s }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+    <div class="lf-select-wrap filter-select-wrap">
+      <select class="filter-select" [(ngModel)]="filterStatus" (ngModelChange)="applyFilter()">
+        <option value="">All Statuses</option>
+        <option *ngFor="let s of caseStatuses" [value]="s">{{ s }}</option>
+      </select>
+      <svg class="select-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
 
-        <button mat-stroked-button (click)="searchText=''; filterStatus=''; applyFilter()">
-          <mat-icon>clear</mat-icon> Clear
-        </button>
-      </div>
-    </mat-card-content>
-  </mat-card>
+    <button class="btn-ghost-sm" (click)="searchText=''; filterStatus=''; applyFilter()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Clear
+    </button>
 
-  <!-- Cases Table -->
-  <mat-card class="table-card">
-    <mat-card-content>
-      <div *ngIf="isLoading" class="loading">
-        <mat-spinner diameter="40"></mat-spinner>
-      </div>
+    <span class="filter-count">{{ filteredCases.length }} case{{ filteredCases.length !== 1 ? 's' : '' }}</span>
+  </div>
 
-      <div *ngIf="!isLoading" class="table-container">
-        <table mat-table [dataSource]="filteredCases">
+  <!-- ── Table Panel ────────────────────────────────────────────────────────── -->
+  <div class="panel">
 
-          <ng-container matColumnDef="caseNumber">
-            <th mat-header-cell *matHeaderCellDef>Case #</th>
-            <td mat-cell *matCellDef="let c">
-              <span class="case-number">{{ c.caseNumber }}</span>
-            </td>
-          </ng-container>
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="isLoading">
+      <span class="spinner-ring"></span>
+      <span>Loading cases…</span>
+    </div>
 
-          <ng-container matColumnDef="title">
-            <th mat-header-cell *matHeaderCellDef>Title</th>
-            <td mat-cell *matCellDef="let c">
+    <!-- Table -->
+    <div class="lf-table-wrap" *ngIf="!isLoading">
+      <table class="lf-table">
+        <thead>
+          <tr>
+            <th>Case #</th>
+            <th>Title</th>
+            <th>Client</th>
+            <th>Lawyer</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Opened</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="lf-row" *ngFor="let c of filteredCases">
+
+            <!-- Case Number -->
+            <td><span class="case-num">{{ c.caseNumber }}</span></td>
+
+            <!-- Title + description -->
+            <td>
               <div class="case-title">{{ c.title }}</div>
-              <div class="case-desc">{{ c.description | slice:0:50 }}{{ c.description?.length > 50 ? '...' : '' }}</div>
+              <div class="case-desc" *ngIf="c.description">
+                {{ c.description.length > 55 ? (c.description | slice:0:55) + '…' : c.description }}
+              </div>
             </td>
-          </ng-container>
 
-          <ng-container matColumnDef="client">
-            <th mat-header-cell *matHeaderCellDef>Client</th>
-            <td mat-cell *matCellDef="let c">{{ c.clientName || '—' }}</td>
-          </ng-container>
+            <!-- Client -->
+            <td class="cell-muted">{{ c.clientName || '—' }}</td>
 
-          <ng-container matColumnDef="lawyer">
-            <th mat-header-cell *matHeaderCellDef>Lawyer</th>
-            <td mat-cell *matCellDef="let c">
-              <span *ngIf="c.lawyerName">{{ c.lawyerName }}</span>
+            <!-- Lawyer -->
+            <td>
+              <span *ngIf="c.lawyerName" class="cell-muted">{{ c.lawyerName }}</span>
               <span *ngIf="!c.lawyerName" class="unassigned">Unassigned</span>
             </td>
-          </ng-container>
 
-          <ng-container matColumnDef="type">
-            <th mat-header-cell *matHeaderCellDef>Type</th>
-            <td mat-cell *matCellDef="let c">
-              <span class="type-badge">{{ c.caseType || '—' }}</span>
+            <!-- Type -->
+            <td>
+              <span class="type-badge" *ngIf="c.caseType">{{ c.caseType }}</span>
+              <span class="cell-muted" *ngIf="!c.caseType">—</span>
             </td>
-          </ng-container>
 
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let c">
-              <span class="status-badge" [style.background-color]="getStatusColor(c.status)">
+            <!-- Status -->
+            <td>
+              <span class="status-badge" [class]="'csb--' + c.status?.toLowerCase()">
                 {{ c.status }}
               </span>
             </td>
-          </ng-container>
 
-          <ng-container matColumnDef="dateOpened">
-            <th mat-header-cell *matHeaderCellDef>Opened</th>
-            <td mat-cell *matCellDef="let c">{{ c.dateOpened | date:'mediumDate' }}</td>
-          </ng-container>
+            <!-- Opened date -->
+            <td class="cell-muted">{{ c.dateOpened | date:'mediumDate' }}</td>
 
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let c">
-              <button mat-icon-button color="primary"
-                      (click)="openEditDialog(c)"
-                      matTooltip="Edit Case">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="accent"
-                      (click)="openAssignDialog(c)"
-                      matTooltip="Assign Lawyer">
-                <mat-icon>person_add</mat-icon>
-              </button>
-              <button mat-icon-button color="warn"
-                      (click)="deleteCase(c.id)"
-                      matTooltip="Delete Case">
-                <mat-icon>delete</mat-icon>
-              </button>
+            <!-- Actions -->
+            <td>
+              <div class="action-btns">
+                <button class="action-btn action-btn--edit" (click)="openEditDialog(c)" title="Edit case">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="action-btn action-btn--assign" (click)="openAssignDialog(c)" title="Assign lawyer">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="8.5" cy="7" r="4"/>
+                    <line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+                  </svg>
+                </button>
+                <button class="action-btn action-btn--danger" (click)="deleteCase(c.id)" title="Delete case">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                  </svg>
+                </button>
+              </div>
             </td>
-          </ng-container>
+          </tr>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
+          <!-- Empty state -->
+          <tr *ngIf="filteredCases.length === 0">
+            <td colspan="8" class="no-data">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" class="no-data-icon">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <p>No cases found. Click "New Case" to create one.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-        <div *ngIf="filteredCases.length === 0" class="no-data">
-          <mat-icon>gavel</mat-icon>
-          <p>No cases found. Click "New Case" to create one.</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     Create / Edit Case Modal
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="caseDialogOpen" (click)="closeCaseDialog()">
+  <div class="modal-card modal-card--wide" (click)="$event.stopPropagation()">
+
+    <button class="modal-close" (click)="closeCaseDialog()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-heading">
+      <span class="overline">{{ caseDialogMode === 'create' ? 'New Record' : 'Edit Record' }}</span>
+      <h3>{{ caseDialogMode === 'create' ? 'Create Case' : 'Edit Case' }}</h3>
+    </div>
+
+    <form [formGroup]="caseForm" (ngSubmit)="submitCaseDialog()" class="modal-form" novalidate>
+
+      <!-- Case Number + Type -->
+      <div class="field-row">
+        <div class="lf-field">
+          <label class="lf-label">Case Number</label>
+          <div class="lf-input-wrap" [class.has-error]="caseForm.get('caseNumber')?.invalid && caseForm.get('caseNumber')?.touched">
+            <input class="lf-input" type="text" formControlName="caseNumber" placeholder="CASE-2024-001" />
+          </div>
+          <span class="lf-error" *ngIf="caseForm.get('caseNumber')?.hasError('required') && caseForm.get('caseNumber')?.touched">Required</span>
+        </div>
+        <div class="lf-field">
+          <label class="lf-label">Case Type</label>
+          <div class="lf-input-wrap lf-select-wrap">
+            <select class="lf-input lf-select" formControlName="caseType">
+              <option value="">— Select type —</option>
+              <option *ngFor="let t of caseTypes" [value]="t">{{ t }}</option>
+            </select>
+            <svg class="select-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
         </div>
       </div>
-    </mat-card-content>
-  </mat-card>
+
+      <!-- Title -->
+      <div class="lf-field">
+        <label class="lf-label">Title</label>
+        <div class="lf-input-wrap" [class.has-error]="caseForm.get('title')?.invalid && caseForm.get('title')?.touched">
+          <input class="lf-input" type="text" formControlName="title" placeholder="Case title" />
+        </div>
+        <span class="lf-error" *ngIf="caseForm.get('title')?.hasError('required') && caseForm.get('title')?.touched">Required</span>
+      </div>
+
+      <!-- Description -->
+      <div class="lf-field">
+        <label class="lf-label">Description</label>
+        <div class="lf-input-wrap">
+          <textarea class="lf-input lf-textarea" formControlName="description" rows="3" placeholder="Brief case description…"></textarea>
+        </div>
+      </div>
+
+      <!-- Status + Fees -->
+      <div class="field-row">
+        <div class="lf-field">
+          <label class="lf-label">Status</label>
+          <div class="lf-input-wrap lf-select-wrap">
+            <select class="lf-input lf-select" formControlName="status">
+              <option *ngFor="let s of caseStatuses" [value]="s">{{ s }}</option>
+            </select>
+            <svg class="select-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div class="lf-field">
+          <label class="lf-label">Fees Charged (₹)</label>
+          <div class="lf-input-wrap">
+            <input class="lf-input" type="number" formControlName="feesCharged" placeholder="0.00" min="0" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Client + Lawyer -->
+      <div class="field-row">
+        <div class="lf-field">
+          <label class="lf-label">Assign Client</label>
+          <div class="lf-input-wrap lf-select-wrap">
+            <select class="lf-input lf-select" formControlName="clientId">
+              <option [ngValue]="null">— None —</option>
+              <option *ngFor="let cl of clients" [ngValue]="cl.id">{{ cl.firstName }} {{ cl.lastName }}</option>
+            </select>
+            <svg class="select-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div class="lf-field">
+          <label class="lf-label">Assign Lawyer</label>
+          <div class="lf-input-wrap lf-select-wrap">
+            <select class="lf-input lf-select" formControlName="lawyerId">
+              <option [ngValue]="null">— None —</option>
+              <option *ngFor="let l of lawyers" [ngValue]="l.id">{{ l.firstName }} {{ l.lastName }}</option>
+            </select>
+            <svg class="select-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Court + Judge -->
+      <div class="field-row">
+        <div class="lf-field">
+          <label class="lf-label">Court Name</label>
+          <div class="lf-input-wrap">
+            <input class="lf-input" type="text" formControlName="courtName" placeholder="District Court…" />
+          </div>
+        </div>
+        <div class="lf-field">
+          <label class="lf-label">Judge Name</label>
+          <div class="lf-input-wrap">
+            <input class="lf-input" type="text" formControlName="judgeName" placeholder="Hon. Judge…" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Opposing Counsel -->
+      <div class="lf-field">
+        <label class="lf-label">Opposing Counsel</label>
+        <div class="lf-input-wrap">
+          <input class="lf-input" type="text" formControlName="opposingCounsel" placeholder="Counsel name" />
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button type="button" class="btn-outline-sm" (click)="closeCaseDialog()">Cancel</button>
+        <button type="submit" class="btn-gold" [disabled]="caseForm.invalid || caseDialogLoading">
+          <span *ngIf="!caseDialogLoading" class="btn-label">
+            {{ caseDialogMode === 'create' ? 'Create Case' : 'Update Case' }}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+          <span *ngIf="caseDialogLoading" class="btn-spinner">
+            <span class="spinner-ring"></span>Saving…
+          </span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     Assign Lawyer Modal
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="assignDialogOpen" (click)="closeAssignDialog()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <button class="modal-close" (click)="closeAssignDialog()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-heading">
+      <span class="overline">Case Assignment</span>
+      <h3>Assign Lawyer</h3>
+      <p class="modal-sub" *ngIf="assigningCase">
+        Case: <strong>{{ assigningCase.title }}</strong>
+      </p>
+    </div>
+
+    <div class="lf-field" style="margin-bottom:0">
+      <label class="lf-label">Select Lawyer</label>
+      <div class="lf-input-wrap lf-select-wrap">
+        <select class="lf-input lf-select" [(ngModel)]="selectedLawyerId">
+          <option [ngValue]="null">— Select a lawyer —</option>
+          <option *ngFor="let l of lawyers" [ngValue]="l.id">{{ l.firstName }} {{ l.lastName }}</option>
+        </select>
+        <svg class="select-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-outline-sm" (click)="closeAssignDialog()">Cancel</button>
+      <button type="button" class="btn-gold" [disabled]="!selectedLawyerId" (click)="submitAssign()">
+        <span class="btn-label">
+          Assign Lawyer
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+      </button>
+    </div>
+
+  </div>
 </div>

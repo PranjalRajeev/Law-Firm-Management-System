@@ -1,0 +1,271 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// LexFirma — Client Messages
+// ─────────────────────────────────────────────────────────────────────────────
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+$ink:        #0D0C0A; $ink-soft:  #1A1916; $ink-mid: #252320; $ink-lift: #2E2C28;
+$parchment:  #F5F0E8; $gold:      #C9A84C; $gold-light: #E2C47A;
+$muted:      #7A7469; $muted-light: #ABA49A;
+$border:     rgba(201,168,76,.13); $border-soft: rgba(201,168,76,.07);
+$ease: cubic-bezier(.4,0,.2,1); $ease-out: cubic-bezier(0,0,.2,1);
+
+*, *::before, *::after { box-sizing: border-box; }
+
+.messages-wrapper {
+  height: calc(100vh - 60px); /* fill content-area below topbar */
+  display: flex; flex-direction: column;
+  background: $ink; color: $parchment;
+  font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased;
+  padding: 2rem 2rem 0;
+}
+
+.overline {
+  display: block; font-size: .68rem; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: $gold; margin-bottom: .5rem; opacity: .8;
+}
+
+.dash-header {
+  flex-shrink: 0; padding-bottom: 1.5rem; border-bottom: 1px solid $border-soft; margin-bottom: 1.5rem;
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 700; line-height: 1.1;
+    color: $parchment; margin: 0 0 .3rem;
+    em { font-style: italic; color: $gold; }
+  }
+  .dash-subtitle { font-size: .875rem; color: $muted; margin: 0; }
+}
+
+// ── Two-column layout ─────────────────────────────────────────────────────────
+.messages-layout {
+  flex: 1; display: grid; grid-template-columns: 280px 1fr;
+  gap: 0; overflow: hidden;
+  border: 1px solid $border; border-radius: 6px;
+  margin-bottom: 2rem;
+}
+
+// ── Case list (left) ──────────────────────────────────────────────────────────
+.case-list-panel {
+  background: $ink-soft; border-right: 1px solid $border;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+.case-list-head {
+  padding: 1rem 1.25rem; border-bottom: 1px solid $border-soft; flex-shrink: 0;
+}
+
+.section-label {
+  font-size: .65rem; font-weight: 600; letter-spacing: .18em;
+  text-transform: uppercase; color: $muted;
+}
+
+.case-list {
+  flex: 1; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: rgba($gold,.15) transparent;
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-thumb { background: rgba($gold,.15); border-radius: 2px; }
+}
+
+.no-cases {
+  padding: 2rem 1.25rem; text-align: center;
+  font-style: italic; font-size: .875rem; color: $muted;
+}
+
+.case-list-item {
+  width: 100%; background: none; border: none; border-bottom: 1px solid $border-soft;
+  padding: 1rem 1.25rem; text-align: left; cursor: pointer;
+  transition: background .15s $ease;
+
+  &:hover { background: rgba($gold,.05); }
+  &.active { background: rgba($gold,.1); border-left: 2px solid $gold; }
+  &:last-child { border-bottom: none; }
+}
+
+.cli-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: .3rem; }
+
+.cli-num {
+  font-family: 'Cormorant Garamond', serif; font-size: .9rem; font-weight: 700;
+  color: $gold; letter-spacing: .04em;
+}
+
+.cli-badge {
+  background: $gold; color: $ink; font-size: .58rem; font-weight: 700;
+  min-width: 18px; height: 18px; border-radius: 9px; padding: 0 .3rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.cli-title {
+  font-size: .83rem; font-weight: 600; color: $parchment; line-height: 1.3; margin-bottom: .25rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.cli-lawyer {
+  display: flex; align-items: center; gap: .35rem;
+  font-size: .72rem; color: $muted;
+}
+
+.cli-no-lawyer { font-size: .72rem; color: rgba($muted,.6); font-style: italic; }
+
+// ── Chat panel (right) ────────────────────────────────────────────────────────
+.chat-panel {
+  display: flex; flex-direction: column; overflow: hidden; background: $ink;
+}
+
+.chat-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.25rem; color: rgba($muted,.5);
+  svg { opacity: .25; }
+  p { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; text-align: center; color: $muted; max-width: 280px; margin: 0; }
+  strong { color: $parchment; }
+}
+
+// ── Chat header ───────────────────────────────────────────────────────────────
+.chat-header {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1rem 1.5rem; border-bottom: 1px solid $border; flex-shrink: 0;
+  background: $ink-soft;
+}
+
+.chat-header-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba($gold,.15); border: 1px solid rgba($gold,.25);
+  color: $gold; font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.chat-header-info { flex: 1; min-width: 0; }
+
+.chat-header-name {
+  font-weight: 600; font-size: .9rem; color: $parchment; line-height: 1.2;
+}
+
+.chat-header-case {
+  font-size: .72rem; color: $muted; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.chat-header-status {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .72rem; font-weight: 500; color: $muted; flex-shrink: 0;
+}
+
+.online-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #4EB87A;
+  box-shadow: 0 0 6px rgba(#4EB87A,.5);
+}
+
+// ── Messages scroll area ──────────────────────────────────────────────────────
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 1.25rem 1.5rem;
+  display: flex; flex-direction: column; gap: .25rem;
+  scrollbar-width: thin; scrollbar-color: rgba($gold,.15) transparent;
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-thumb { background: rgba($gold,.15); border-radius: 2px; }
+}
+
+.chat-loading {
+  display: flex; justify-content: center; padding: 2rem;
+}
+
+.no-messages {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  p { font-family: 'Cormorant Garamond', serif; font-style: italic; color: $muted; font-size: .95rem; }
+}
+
+// ── Date separator ────────────────────────────────────────────────────────────
+.date-separator {
+  display: flex; align-items: center; justify-content: center;
+  margin: 1rem 0; position: relative;
+
+  &::before {
+    content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px;
+    background: $border-soft;
+  }
+
+  span {
+    position: relative; background: $ink; padding: 0 .875rem;
+    font-size: .68rem; font-weight: 500; letter-spacing: .08em;
+    text-transform: uppercase; color: $muted;
+  }
+}
+
+// ── Message bubbles ───────────────────────────────────────────────────────────
+.msg-row {
+  display: flex; margin-bottom: .25rem;
+  &--mine { justify-content: flex-end; }
+}
+
+.msg-bubble {
+  max-width: 72%; background: $ink-soft; border: 1px solid $border-soft;
+  border-radius: 12px 12px 12px 2px; padding: .75rem 1rem;
+  animation: bubbleIn .15s $ease-out both;
+
+  &--mine {
+    background: rgba($gold,.12); border-color: rgba($gold,.2);
+    border-radius: 12px 12px 2px 12px;
+  }
+}
+
+.msg-content {
+  font-size: .875rem; color: $parchment; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+}
+
+.msg-meta {
+  display: flex; align-items: center; gap: .35rem; justify-content: flex-end;
+  margin-top: .375rem;
+}
+
+.msg-time { font-size: .65rem; color: $muted; }
+
+.msg-read svg, .msg-read .read-icon { color: $gold; }
+.msg-read .sent-icon { color: $muted; }
+
+// ── Compose area ──────────────────────────────────────────────────────────────
+.chat-compose {
+  display: flex; align-items: flex-end; gap: .75rem;
+  padding: 1rem 1.5rem; border-top: 1px solid $border; flex-shrink: 0;
+  background: $ink-soft;
+}
+
+.compose-input-wrap { flex: 1; }
+
+.compose-input {
+  width: 100%; background: $ink-mid;
+  border: 1px solid rgba($parchment,.1); border-radius: 6px;
+  padding: .75rem 1rem; color: $parchment;
+  font-family: 'DM Sans', sans-serif; font-size: .9rem;
+  resize: none; max-height: 120px; overflow-y: auto; line-height: 1.5;
+  transition: border-color .2s $ease;
+  &::placeholder { color: $muted; }
+  &:focus { outline: none; border-color: $gold; }
+}
+
+.compose-send {
+  width: 42px; height: 42px; border-radius: 6px; flex-shrink: 0;
+  background: $gold; color: $ink; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s $ease, transform .15s $ease;
+  &:hover:not(:disabled) { background: $gold-light; transform: translateY(-1px); }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+}
+
+// ── Spinners ──────────────────────────────────────────────────────────────────
+.spinner-ring {
+  border-radius: 50%; border: 2px solid rgba($parchment,.1); border-top-color: $gold;
+  animation: spin .7s linear infinite;
+  width: 22px; height: 22px; display: inline-block;
+  &--sm { width: 16px; height: 16px; border-top-color: $ink; }
+}
+
+.loading-state { display: flex; justify-content: center; padding: 2rem; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes spin   { to { transform: rotate(360deg); } }
+@keyframes bubbleIn { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: none; } }
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .messages-wrapper { padding: 1.25rem 1rem 0; }
+  .messages-layout  { grid-template-columns: 1fr; }
+  .case-list-panel  { display: none; }   // Use a back-button flow on mobile
+}

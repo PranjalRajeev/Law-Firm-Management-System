@@ -1,188 +1,357 @@
-.analytics-container {
+// ─────────────────────────────────────────────────────────────────────────────
+// LexFirma — Analytics
+// Dark Luxury Editorial Theme
+// ─────────────────────────────────────────────────────────────────────────────
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+$ink:        #0D0C0A;
+$ink-soft:   #1A1916;
+$ink-mid:    #252320;
+$parchment:  #F5F0E8;
+$gold:       #C9A84C;
+$gold-light: #E2C47A;
+$muted:      #7A7469;
+$muted-light:#ABA49A;
+$border:     rgba(201, 168, 76, 0.13);
+$border-soft:rgba(201, 168, 76, 0.07);
+
+$valid:      #4EB87A;
+$error:      #d46060;
+
+$ease:     cubic-bezier(0.4, 0, 0.2, 1);
+$ease-out: cubic-bezier(0.0, 0, 0.2, 1);
+
+// ── Wrapper ───────────────────────────────────────────────────────────────────
+.analytics-wrapper {
+  min-height: 100vh;
+  background: $ink;
+  color: $parchment;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 2.5rem 2.5rem 4rem;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-.page-header {
-  margin-bottom: 24px;
-  h1 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #1a237e;
-    margin: 0;
-  }
-  p { color: #666; margin: 4px 0 0; }
+// ── Overline ──────────────────────────────────────────────────────────────────
+.overline {
+  display: block;
+  font-size: .68rem; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: $gold; margin-bottom: .5rem; opacity: .8;
 }
 
+// ── Page Header ───────────────────────────────────────────────────────────────
+.dash-header {
+  display: flex;
+  align-items: flex-end; justify-content: space-between;
+  margin-bottom: 2rem; padding-bottom: 2rem;
+  border-bottom: 1px solid $border-soft;
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3.5vw, 2.8rem);
+    font-weight: 700; line-height: 1.1;
+    color: $parchment; margin: 0 0 .4rem;
+    em { font-style: italic; color: $gold; }
+  }
+  .dash-subtitle { font-size: .875rem; color: $muted; margin: 0; }
+}
+
+// ── Gold button ───────────────────────────────────────────────────────────────
+.btn-gold {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: $gold; color: $ink;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .8rem; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  padding: .65rem 1.4rem;
+  border-radius: 3px; border: none; cursor: pointer;
+  transition: background .25s $ease, transform .2s $ease, box-shadow .25s $ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: $gold-light;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba($gold,.3);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Summary Stat Cards (same pattern as dashboard)
+// ─────────────────────────────────────────────────────────────────────────────
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: $border;
+  border: 1px solid $border;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 1.75rem;
 }
 
-.summary-card {
-  border-radius: 12px !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
+.stat-card {
+  background: $ink-soft;
+  padding: 1.75rem 1.5rem;
+  position: relative; overflow: hidden;
+  animation: fadeUp .6s $ease-out both;
+  animation-delay: var(--delay, 0s);
+  transition: background .25s $ease;
 
-  mat-card-content {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px !important;
+  &::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0;
+    width: 0; height: 2px; background: $gold;
+    transition: width .35s $ease;
   }
+  &:hover { background: #2E2C28; &::after { width: 100%; } }
 
-  .summary-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-
-    mat-icon { color: white; font-size: 24px; }
-
-    &.blue { background: linear-gradient(135deg, #1565c0, #1976d2); }
-    &.green { background: linear-gradient(135deg, #2e7d32, #43a047); }
-    &.purple { background: linear-gradient(135deg, #6a1b9a, #8e24aa); }
-    &.orange { background: linear-gradient(135deg, #e65100, #fb8c00); }
-  }
-
-  .summary-info {
-    h2 { font-size: 1.8rem; font-weight: 700; color: #1a237e; margin: 0; }
-    p { color: #666; margin: 4px 0 0; font-size: 0.85rem; }
+  &--accent {
+    background: rgba($gold,.06);
+    .stat-value { color: $gold-light; }
+    .stat-icon-wrap { background: rgba($gold,.15); color: $gold; }
+    &:hover { background: rgba($gold,.1); }
   }
 }
 
+.stat-card-inner { display: flex; flex-direction: column; gap: .75rem; }
+
+.stat-top {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.stat-label {
+  font-size: .7rem; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; color: $muted;
+}
+
+.stat-icon-wrap {
+  width: 32px; height: 32px;
+  background: rgba($gold,.08); border: 1px solid rgba($gold,.15);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: $gold; flex-shrink: 0;
+}
+
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.6rem; font-weight: 700;
+  color: $parchment; line-height: 1;
+}
+
+.stat-rule { width: 24px; height: 1px; background: rgba($gold,.3); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Charts Grid
+// ─────────────────────────────────────────────────────────────────────────────
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  gap: 1.75rem;
 }
 
-.chart-card {
-  border-radius: 12px !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
+// ── Panel ─────────────────────────────────────────────────────────────────────
+.panel {
+  background: $ink-soft;
+  border: 1px solid $border;
+  border-radius: 6px;
+  overflow: hidden;
+  animation: fadeUp .6s $ease-out both;
+  animation-delay: var(--delay, 0s);
 
-  &.full-width { grid-column: 1 / -1; }
+  &--full { grid-column: 1 / -1; }
+}
 
-  mat-card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1a237e;
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.375rem 1.75rem;
+  border-bottom: 1px solid $border-soft;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 40%; min-height: 20px;
+    background: $gold; border-radius: 0 2px 2px 0;
   }
 }
 
+.panel-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem; font-weight: 700;
+  color: $parchment; margin: 0; line-height: 1.2;
+}
+
+.panel-body {
+  padding: 1.5rem 1.75rem;
+  &--flush { padding: 0; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bar Charts
+// ─────────────────────────────────────────────────────────────────────────────
 .bar-chart {
-  padding: 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: flex; flex-direction: column; gap: 1.1rem;
+  margin-bottom: 1.25rem;
+
+  &--dense { gap: .875rem; }
 }
 
 .bar-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  .bar-label {
-    width: 100px;
-    font-size: 0.85rem;
-    color: #555;
-    font-weight: 500;
-    flex-shrink: 0;
-  }
-
-  .bar-track {
-    flex: 1;
-    background: #f0f0f0;
-    border-radius: 8px;
-    height: 28px;
-    overflow: hidden;
-  }
-
-  .bar-fill {
-    height: 100%;
-    border-radius: 8px;
-    transition: width 0.8s ease;
-    min-width: 4px;
-  }
-
-  .bar-value {
-    width: 30px;
-    text-align: right;
-    font-weight: 600;
-    color: #333;
-    font-size: 0.9rem;
-  }
+  display: grid;
+  grid-template-columns: 90px 1fr 36px;
+  align-items: center; gap: .875rem;
 }
 
+.bar-label {
+  font-size: .75rem; font-weight: 600;
+  color: $muted; letter-spacing: .04em;
+  text-transform: uppercase; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+
+  &--wide { grid-column: unset; width: 130px; }
+}
+
+.bar-track {
+  height: 8px;
+  background: rgba($parchment, .06);
+  border-radius: 4px; overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%; border-radius: 4px;
+  transition: width .9s $ease-out;
+  min-width: 3px;
+}
+
+.bar-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem; font-weight: 700;
+  color: $parchment; text-align: right;
+}
+
+// ── Legend ────────────────────────────────────────────────────────────────────
 .chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding-top: 8px;
-  border-top: 1px solid #f0f0f0;
-  margin-top: 8px;
+  display: flex; flex-wrap: wrap; gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid $border-soft;
 }
 
 .legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  color: #555;
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .75rem; color: $muted;
 
-  .legend-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
+  strong { color: $parchment; font-weight: 600; }
+}
+
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%; flex-shrink: 0;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recent Users Table
+// ─────────────────────────────────────────────────────────────────────────────
+.lf-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.lf-table {
+  width: 100%; border-collapse: collapse; font-size: .875rem;
+
+  thead tr { border-bottom: 1px solid $border; }
+
+  th {
+    padding: .875rem 1.25rem;
+    font-size: .63rem; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: $muted; text-align: left; white-space: nowrap;
+    background: rgba($ink, .4);
+  }
+
+  td {
+    padding: .9rem 1.25rem;
+    color: rgba($parchment, .75);
+    border-bottom: 1px solid $border-soft;
+    vertical-align: middle;
+  }
+
+  .lf-row {
+    transition: background .15s $ease;
+    &:hover { background: rgba($gold,.04); td { color: $parchment; } }
+    &:last-child td { border-bottom: none; }
   }
 }
 
-.analytics-table {
-  width: 100%;
-  th { color: #666; font-size: 0.8rem; text-transform: uppercase; font-weight: 600; }
-  tr:hover { background: #f5f6fa; }
+.cell-muted { color: $muted !important; font-size: .84rem; }
+
+.user-cell { display: flex; align-items: center; gap: .75rem; }
+
+.avatar--sm {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba($gold,.12); border: 1px solid rgba($gold,.22);
+  color: $gold;
+  font-size: .65rem; font-weight: 700; letter-spacing: .04em;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
 
-.role-chip {
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: #e3f2fd;
-  color: #1565c0;
+.user-name-text {
+  font-weight: 600; font-size: .875rem; color: $parchment;
 }
 
-.active-badge {
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: #e8f5e9;
-  color: #2e7d32;
+// ── Badges ────────────────────────────────────────────────────────────────────
+.badge {
+  display: inline-flex; align-items: center;
+  padding: .22rem .65rem; border-radius: 3px;
+  font-size: .64rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  border: 1px solid transparent;
+
+  &--admin   { background: rgba(#d46060,.1); color: #d46060;  border-color: rgba(#d46060,.2); }
+  &--lawyer  { background: rgba(#6FA3D4,.1); color: #6FA3D4;  border-color: rgba(#6FA3D4,.2); }
+  &--client  { background: rgba(#b09ddd,.1); color: #b09ddd;  border-color: rgba(#b09ddd,.2); }
+  &--active  { background: rgba($valid,.1);  color: $valid;   border-color: rgba($valid,.2); }
+  &--inactive{ background: rgba($error,.1);  color: $error;   border-color: rgba($error,.2); }
 }
 
-.inactive-badge {
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: #ffebee;
-  color: #c62828;
-}
-
+// ── No data ───────────────────────────────────────────────────────────────────
 .no-data {
-  text-align: center;
-  color: #999;
-  padding: 40px;
-  font-style: italic;
+  text-align: center; padding: 3rem;
+  color: $muted;
+  display: flex; flex-direction: column; align-items: center; gap: .75rem;
+}
+
+.no-data-icon { color: rgba($muted,.4); }
+
+.no-data p {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 1rem; margin: 0;
+}
+
+// ── Keyframes ─────────────────────────────────────────────────────────────────
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 1100px) {
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .charts-grid { grid-template-columns: 1fr; }
-  .chart-card.full-width { grid-column: 1; }
+  .analytics-wrapper { padding: 1.5rem 1rem 3rem; }
+  .dash-header        { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+  .charts-grid        { grid-template-columns: 1fr; }
+  .panel--full        { grid-column: 1; }
+  .bar-row            { grid-template-columns: 80px 1fr 28px; }
+  .bar-label--wide    { width: 100px; }
+}
+
+@media (max-width: 480px) {
+  .summary-grid { grid-template-columns: 1fr; }
 }

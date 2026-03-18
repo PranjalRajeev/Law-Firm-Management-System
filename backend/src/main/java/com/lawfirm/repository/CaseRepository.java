@@ -10,10 +10,11 @@ import java.util.List;
 
 @Repository
 public interface CaseRepository extends JpaRepository<Case, Long> {
-    List<Case> findByClientId(Long clientId);
+    List<Case> findByClient_Id(Long clientId);
     List<Case> findByAssignedLawyerId(Long lawyerId);
     List<Case> findByStatus(Case.CaseStatus status);
     List<Case> findByCaseType(Case.CaseType caseType);
+    List<Case> findByClientId(Long clientId);
     
     @Query("SELECT c FROM Case c WHERE c.client.id = :clientId OR c.assignedLawyer.id = :lawyerId")
     List<Case> findCasesByClientOrLawyer(@Param("clientId") Long clientId, @Param("lawyerId") Long lawyerId);

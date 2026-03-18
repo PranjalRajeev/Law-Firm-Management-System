@@ -1,61 +1,248 @@
-<div class="login-container">
-  <div class="login-card">
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title class="login-title">Login</mat-card-title>
-        <mat-card-subtitle>Access your law firm management system</mat-card-subtitle>
-      </mat-card-header>
-      
-      <mat-card-content>
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-          <div class="form-field">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Username</mat-label>
-              <input matInput formControlName="username" placeholder="Enter your username">
-              <mat-icon matSuffix>person</mat-icon>
-              <mat-error *ngIf="loginForm.get('username')?.hasError('required')">
-                Username is required
-              </mat-error>
-              <mat-error *ngIf="loginForm.get('username')?.hasError('minlength')">
-                Username must be at least 3 characters
-              </mat-error>
-            </mat-form-field>
-          </div>
+<div class="login-wrapper">
 
-          <div class="form-field">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Password</mat-label>
-              <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="Enter your password">
-              <button type="button" mat-icon-button matSuffix (click)="togglePasswordVisibility()">
-                <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-              </button>
-              <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
-                Password is required
-              </mat-error>
-              <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">
-                Password must be at least 6 characters
-              </mat-error>
-            </mat-form-field>
-          </div>
+  <!-- Background -->
+  <div class="login-bg">
+    <div class="login-overlay"></div>
+    <div class="bg-grain"></div>
+  </div>
 
-          <div class="form-actions">
-            <button mat-raised-button type="submit" class="login-button" [disabled]="loginForm.invalid || isLoading">
-              <span *ngIf="!isLoading">Login</span>
-              <span *ngIf="isLoading">
-                <mat-spinner diameter="20"></mat-spinner>
-                Logging in...
-              </span>
+  <!-- Left panel: brand / decorative -->
+  <aside class="login-panel">
+    <div class="panel-inner">
+      <a class="logo" routerLink="/">
+        <span class="logo-mark">L</span>
+        <span class="logo-text">Lex<em>Firma</em></span>
+      </a>
+
+      <div class="panel-quote">
+        <span class="quote-rule"></span>
+        <blockquote>
+          "The first duty of society is justice."
+        </blockquote>
+        <cite>— Alexander Hamilton</cite>
+      </div>
+
+      <div class="panel-stat-row">
+        <div class="panel-stat">
+          <span class="ps-value">2,400+</span>
+          <span class="ps-label">Cases Managed</span>
+        </div>
+        <div class="panel-stat">
+          <span class="ps-value">98%</span>
+          <span class="ps-label">Client Satisfaction</span>
+        </div>
+        <div class="panel-stat">
+          <span class="ps-value">15+</span>
+          <span class="ps-label">Years of Service</span>
+        </div>
+      </div>
+
+      <div class="panel-footer-seal">
+        <span class="seal-text">Est. MMXXIV</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right panel: form -->
+  <main class="login-form-section">
+    <div class="login-form-inner">
+
+      <!-- Mobile logo -->
+      <a class="logo logo-mobile" routerLink="/">
+        <span class="logo-mark">L</span>
+        <span class="logo-text">Lex<em>Firma</em></span>
+      </a>
+
+      <div class="form-heading">
+        <span class="overline">Secure Access</span>
+        <h1>Welcome<br><em>back</em></h1>
+        <p class="form-subtext">Sign in to your LexFirma account to manage your cases, documents, and client relationships.</p>
+      </div>
+
+      <!-- Server error banner -->
+      <div class="error-banner" *ngIf="errorMessage">
+        <span class="error-icon">!</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="lf-form" novalidate>
+
+        <!-- ── Username ── -->
+        <div class="lf-field">
+          <label class="lf-label" for="username">Username</label>
+          <div class="lf-input-wrap"
+               [class.has-error]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
+               [class.is-valid]="loginForm.get('username')?.valid && loginForm.get('username')?.touched">
+            <input id="username" class="lf-input" type="text"
+                   formControlName="username" placeholder="e.hargrove"
+                   autocomplete="username" />
+            <span class="field-status-icon" *ngIf="loginForm.get('username')?.touched">
+              <svg *ngIf="loginForm.get('username')?.valid" class="icon-ok" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg *ngIf="loginForm.get('username')?.invalid" class="icon-err" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </span>
+          </div>
+          <span class="lf-error" *ngIf="loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched">Username is required</span>
+          <span class="lf-error" *ngIf="loginForm.get('username')?.hasError('minlength') && loginForm.get('username')?.touched">Minimum 3 characters required</span>
+        </div>
+
+        <!-- ── Password ── -->
+        <div class="lf-field">
+          <div class="lf-label-row">
+            <label class="lf-label" for="password">Password</label>
+            <button type="button" class="forgot-trigger" (click)="openForgotModal()">
+              Forgot password?
             </button>
           </div>
-        </form>
-      </mat-card-content>
-
-      <mat-card-actions>
-        <div class="additional-actions">
-          <button mat-button class="link-button" (click)="navigateToRegister()">Don't have an account? Register</button>
-          <button mat-button class="link-button" (click)="navigateToHome()">Back to Home</button>
+          <div class="lf-input-wrap lf-input-password"
+               [class.has-error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+               [class.is-valid]="loginForm.get('password')?.valid && loginForm.get('password')?.touched">
+            <input id="password" class="lf-input"
+                   [type]="hidePassword ? 'password' : 'text'"
+                   formControlName="password" placeholder="Enter your password"
+                   autocomplete="current-password" />
+            <button type="button" class="visibility-btn" (click)="togglePasswordVisibility()">
+              <svg *ngIf="hidePassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg *ngIf="!hidePassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+          <span class="lf-error" *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">Password is required</span>
+          <span class="lf-error" *ngIf="loginForm.get('password')?.hasError('minlength') && loginForm.get('password')?.touched">Minimum 6 characters required</span>
         </div>
-      </mat-card-actions>
-    </mat-card>
+
+        <!-- ── Submit ── -->
+        <button
+          type="submit"
+          class="btn-gold large full"
+          [disabled]="loginForm.invalid || isLoading"
+          [class.loading]="isLoading"
+        >
+          <span *ngIf="!isLoading" class="btn-label">
+            Sign In
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </span>
+          <span *ngIf="isLoading" class="btn-spinner">
+            <span class="spinner-ring"></span>
+            Signing in…
+          </span>
+        </button>
+
+      </form>
+
+      <div class="form-footer">
+        <span>Don't have an account?</span>
+        <button class="text-link" type="button" (click)="navigateToRegister()">Create one</button>
+        <span class="footer-dot">·</span>
+        <button class="text-link" type="button" (click)="navigateToHome()">Back to Home</button>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     Forgot Password Modal
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="showForgotModal" (click)="closeForgotModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <!-- Close button -->
+    <button type="button" class="modal-close" (click)="closeForgotModal()" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <!-- Icon -->
+    <div class="modal-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+
+    <!-- Success state -->
+    <div class="modal-success" *ngIf="forgotSuccess">
+      <div class="success-badge">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h3>Check your inbox</h3>
+      <p>If an account exists for that email address, we've sent password reset instructions. Check your spam folder if you don't see it.</p>
+      <button type="button" class="btn-gold large full" (click)="closeForgotModal()">
+        <span class="btn-label">Back to Sign In</span>
+      </button>
+    </div>
+
+    <!-- Form state -->
+    <div *ngIf="!forgotSuccess">
+      <div class="modal-heading">
+        <h3>Reset your password</h3>
+        <p>Enter the email address linked to your account and we'll send you reset instructions.</p>
+      </div>
+
+      <!-- Error -->
+      <div class="error-banner" *ngIf="forgotError">
+        <span class="error-icon">!</span>
+        <span>{{ forgotError }}</span>
+      </div>
+
+      <form [formGroup]="forgotForm" (ngSubmit)="onForgotSubmit()" class="lf-form" novalidate>
+
+        <div class="lf-field">
+          <label class="lf-label" for="forgotEmail">Email Address</label>
+          <div class="lf-input-wrap"
+               [class.has-error]="forgotForm.get('email')?.invalid && forgotForm.get('email')?.touched"
+               [class.is-valid]="forgotForm.get('email')?.valid && forgotForm.get('email')?.touched">
+            <input id="forgotEmail" class="lf-input" type="email"
+                   formControlName="email" placeholder="elena&#64;lexfirma.law"
+                   autocomplete="email" />
+            <span class="field-status-icon" *ngIf="forgotForm.get('email')?.touched">
+              <svg *ngIf="forgotForm.get('email')?.valid" class="icon-ok" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg *ngIf="forgotForm.get('email')?.invalid" class="icon-err" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </span>
+          </div>
+          <span class="lf-error"
+                *ngIf="forgotForm.get('email')?.invalid && forgotForm.get('email')?.touched && forgotEmailError">
+            {{ forgotEmailError }}
+          </span>
+        </div>
+
+        <button
+          type="submit"
+          class="btn-gold large full"
+          [disabled]="forgotForm.invalid || forgotLoading"
+          [class.loading]="forgotLoading"
+        >
+          <span *ngIf="!forgotLoading" class="btn-label">
+            Send Reset Link
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+          </span>
+          <span *ngIf="forgotLoading" class="btn-spinner">
+            <span class="spinner-ring"></span>
+            Sending…
+          </span>
+        </button>
+
+      </form>
+
+      <div class="modal-footer-note">
+        Remembered your password?
+        <button type="button" class="text-link" (click)="closeForgotModal()">Sign in</button>
+      </div>
+    </div>
+
   </div>
 </div>

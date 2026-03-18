@@ -1,37 +1,218 @@
-<div class="client-dashboard">
-  <h1 class="dashboard-title">Client Dashboard</h1>
-  
-  <div class="stats-cards">
-    <mat-card class="stat-card">
-      <mat-card-header>
-        <mat-card-title>My Cases</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="stat-number">0</div>
-      </mat-card-content>
-    </mat-card>
+<div class="dash-wrapper">
 
-    <mat-card class="stat-card">
-      <mat-card-header>
-        <mat-card-title>Documents</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="stat-number">0</div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <mat-card-header>
-        <mat-card-title>Messages</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="stat-number">0</div>
-      </mat-card-content>
-    </mat-card>
+  <!-- Loading -->
+  <div class="page-loading" *ngIf="isLoading">
+    <span class="spinner-ring spinner-ring--lg"></span>
+    <span>Loading your dashboard…</span>
   </div>
 
-  <div class="welcome-message">
-    <h2>Welcome to Client Dashboard</h2>
-    <p>View your cases, communicate with your lawyer, and access your documents from here.</p>
-  </div>
+  <ng-container *ngIf="!isLoading && dashboard">
+
+    <!-- ── Header ─────────────────────────────────────────────────────────── -->
+    <div class="dash-header">
+      <div>
+        <span class="overline">Client Portal</span>
+        <h1>Good {{ greeting }}, <em>{{ firstName }}</em></h1>
+        <p class="dash-subtitle">Here's a summary of your legal matters.</p>
+      </div>
+      <button class="btn-gold" (click)="loadDashboard()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        Refresh
+      </button>
+    </div>
+
+    <!-- ── Stat cards ──────────────────────────────────────────────────────── -->
+    <div class="stats-grid">
+
+      <div class="stat-card" style="--delay:.05s">
+        <div class="stat-card-inner">
+          <div class="stat-top">
+            <span class="stat-label">Total Cases</span>
+            <span class="stat-icon-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </span>
+          </div>
+          <div class="stat-value">{{ dashboard.totalCases }}</div>
+          <div class="stat-rule"></div>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card--accent" style="--delay:.1s">
+        <div class="stat-card-inner">
+          <div class="stat-top">
+            <span class="stat-label">Open Cases</span>
+            <span class="stat-icon-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="stat-value">{{ dashboard.openCases }}</div>
+          <div class="stat-rule"></div>
+        </div>
+      </div>
+
+      <div class="stat-card" style="--delay:.15s">
+        <div class="stat-card-inner">
+          <div class="stat-top">
+            <span class="stat-label">Total Fees</span>
+            <span class="stat-icon-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </span>
+          </div>
+          <div class="stat-value">₹{{ dashboard.totalFees | number:'1.0-0' }}</div>
+          <div class="stat-rule"></div>
+        </div>
+      </div>
+
+      <div class="stat-card" style="--delay:.2s">
+        <div class="stat-card-inner">
+          <div class="stat-top">
+            <span class="stat-label">Unread Messages</span>
+            <span class="stat-icon-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="stat-value">{{ dashboard.unreadMessages }}</div>
+          <div class="stat-rule"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Two column: Assigned Lawyer + Upcoming Hearings ────────────────── -->
+    <div class="two-col">
+
+      <!-- Assigned Lawyer Card -->
+      <div class="panel panel--lawyer" style="--delay:.25s">
+        <div class="panel-head">
+          <div>
+            <span class="overline">Your Counsel</span>
+            <h2 class="panel-title">Assigned Lawyer</h2>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="no-data" *ngIf="!dashboard.assignedLawyer">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" class="no-data-icon">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <p>No lawyer assigned yet.</p>
+          </div>
+          <div class="lawyer-card" *ngIf="dashboard.assignedLawyer">
+            <div class="lawyer-avatar">
+              {{ dashboard.assignedLawyer.fullName | slice:0:1 }}
+            </div>
+            <div class="lawyer-info">
+              <h3 class="lawyer-name">{{ dashboard.assignedLawyer.fullName }}</h3>
+              <span class="lawyer-spec" *ngIf="dashboard.assignedLawyer.specialization">
+                {{ dashboard.assignedLawyer.specialization }}
+              </span>
+              <div class="lawyer-meta">
+                <span *ngIf="dashboard.assignedLawyer.yearsOfExperience">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {{ dashboard.assignedLawyer.yearsOfExperience }} yrs experience
+                </span>
+                <span *ngIf="dashboard.assignedLawyer.barNumber">
+                  Bar: {{ dashboard.assignedLawyer.barNumber }}
+                </span>
+              </div>
+            </div>
+            <div class="lawyer-contact">
+              <a class="contact-btn" [href]="'mailto:' + dashboard.assignedLawyer.email" title="Email">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </a>
+              <button class="contact-btn" routerLink="/client/messages" title="Message">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Hearings -->
+      <div class="panel" style="--delay:.3s">
+        <div class="panel-head">
+          <div>
+            <span class="overline">Schedule</span>
+            <h2 class="panel-title">Upcoming Hearings</h2>
+          </div>
+          <a class="panel-link" routerLink="/client/hearings">View all</a>
+        </div>
+        <div class="panel-body panel-body--flush">
+          <div class="no-data-inline" *ngIf="dashboard.upcomingHearings?.length === 0">
+            No upcoming hearings scheduled.
+          </div>
+          <div class="hearing-list" *ngIf="dashboard.upcomingHearings?.length > 0">
+            <div class="hearing-item" *ngFor="let h of dashboard.upcomingHearings">
+              <div class="hearing-date-block">
+                <span class="hearing-day">{{ h.hearingDate | date:'d' }}</span>
+                <span class="hearing-mon">{{ h.hearingDate | date:'MMM' }}</span>
+              </div>
+              <div class="hearing-details">
+                <div class="hearing-title">{{ h.title }}</div>
+                <div class="hearing-meta">
+                  <span *ngIf="h.courtName">{{ h.courtName }}</span>
+                  <span *ngIf="h.caseNumber" class="hearing-case">{{ h.caseNumber }}</span>
+                </div>
+              </div>
+              <span class="hearing-time">{{ h.hearingDate | date:'h:mm a' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Recent Cases ────────────────────────────────────────────────────── -->
+    <div class="panel" style="--delay:.35s">
+      <div class="panel-head">
+        <div>
+          <span class="overline">Active Matters</span>
+          <h2 class="panel-title">Recent Cases</h2>
+        </div>
+        <a class="panel-link" routerLink="/client/cases">View all</a>
+      </div>
+      <div class="panel-body panel-body--flush">
+        <div class="lf-table-wrap">
+          <table class="lf-table">
+            <thead>
+              <tr>
+                <th>Case #</th>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Next Hearing</th>
+                <th>Fees (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="lf-row" *ngFor="let c of dashboard.recentCases" [routerLink]="['/client/cases', c.id]">
+                <td><span class="case-num">{{ c.caseNumber }}</span></td>
+                <td class="cell-title">{{ c.title }}</td>
+                <td><span class="type-badge" *ngIf="c.caseType">{{ c.caseType }}</span></td>
+                <td><span class="status-badge" [class]="'csb--' + c.status?.toLowerCase()">{{ c.status }}</span></td>
+                <td class="cell-muted">{{ c.nextHearingDate ? (c.nextHearingDate | date:'mediumDate') : '—' }}</td>
+                <td class="cell-muted">{{ c.feesCharged ? (c.feesCharged | number:'1.0-0') : '—' }}</td>
+              </tr>
+              <tr *ngIf="dashboard.recentCases?.length === 0">
+                <td colspan="6" class="no-data"><p>No cases found.</p></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
 </div>

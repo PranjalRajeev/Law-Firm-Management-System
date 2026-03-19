@@ -18,41 +18,22 @@ export class ClientLayoutComponent implements OnInit, OnDestroy {
   mobileOpen   = false;
   userMenuOpen = false;
 
-  today        = new Date();
-  userName     = '';
-  userInitials = '';
-  unreadCount  = 0;
+  today          = new Date();
+  userName       = '';
+  userInitials   = '';
+  unreadCount    = 0;
+  activeCaseCount = 0;   // shows on My Cases nav item
   currentPageLabel = 'Dashboard';
 
-  menuItems = [
-    {
-      label: 'Dashboard', route: '/client/dashboard', badge: false,
-      svg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-            </svg>`
-    },
-    {
-      label: 'My Cases', route: '/client/cases', badge: false,
-      svg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-            </svg>`
-    },
-    {
-      label: 'Hearings', route: '/client/hearings', badge: false,
-      svg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>`
-    },
-    {
-      label: 'Messages', route: '/client/messages', badge: true,
-      svg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>`
-    }
+  // ── Nav items mapped to routes for breadcrumb lookup ─────────────────────
+  private navRoutes = [
+    { label: 'Dashboard',  route: '/client/dashboard'  },
+    { label: 'My Cases',   route: '/client/cases'       },
+    { label: 'Hearings',   route: '/client/hearings'    },
+    { label: 'Documents',  route: '/client/documents'   },
+    { label: 'Messages',   route: '/client/messages'    },
+    { label: 'Billing',    route: '/client/billing'     },
+    { label: 'My Profile', route: '/client/profile'     },
   ];
 
   private routerSub?: Subscription;
@@ -68,13 +49,15 @@ export class ClientLayoutComponent implements OnInit, OnDestroy {
     this.checkScreen();
     this.loadUserInfo();
     this.fetchUnreadCount();
+    this.fetchActiveCaseCount();
     this.updateBreadcrumb(this.router.url);
 
+    // Keep breadcrumb in sync on every navigation
     this.routerSub = this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe((e: any) => this.updateBreadcrumb(e.urlAfterRedirects));
 
-    // Poll unread count every 30 seconds
+    // Poll unread messages count every 30 seconds
     this.pollSub = interval(30000).subscribe(() => this.fetchUnreadCount());
   }
 
@@ -83,25 +66,30 @@ export class ClientLayoutComponent implements OnInit, OnDestroy {
     this.pollSub?.unsubscribe();
   }
 
-  // ── Screen ────────────────────────────────────────────────────────────────
+  // ── Screen size ───────────────────────────────────────────────────────────
   @HostListener('window:resize')
-  onResize() { this.checkScreen(); }
+  onResize(): void { this.checkScreen(); }
 
   checkScreen(): void {
     this.isMobile = window.innerWidth < 768;
-    if (this.isMobile) { this.isExpanded = true; this.mobileOpen = false; }
-    else { this.isExpanded = true; }
+    if (this.isMobile) {
+      this.isExpanded = true;
+      this.mobileOpen = false;
+    } else {
+      this.isExpanded = true;
+    }
   }
 
+  // ── Sidebar toggle ────────────────────────────────────────────────────────
   toggleSidebar(): void {
     if (this.isMobile) this.mobileOpen = !this.mobileOpen;
-    else this.isExpanded = !this.isExpanded;
+    else               this.isExpanded = !this.isExpanded;
   }
 
   openMobile():  void { this.mobileOpen = true; }
   closeMobile(): void { this.mobileOpen = false; }
 
-  // ── User menu ─────────────────────────────────────────────────────────────
+  // ── User dropdown ─────────────────────────────────────────────────────────
   toggleUserMenu(): void { this.userMenuOpen = !this.userMenuOpen; }
 
   @HostListener('document:click', ['$event'])
@@ -111,7 +99,7 @@ export class ClientLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── User info ─────────────────────────────────────────────────────────────
+  // ── User info from localStorage ───────────────────────────────────────────
   private loadUserInfo(): void {
     const firstName = localStorage.getItem('firstName') || '';
     const lastName  = localStorage.getItem('lastName')  || '';
@@ -119,7 +107,7 @@ export class ClientLayoutComponent implements OnInit, OnDestroy {
     this.userInitials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || 'C';
   }
 
-  // ── Unread count ──────────────────────────────────────────────────────────
+  // ── Unread message count (topbar bell + Messages badge) ───────────────────
   private fetchUnreadCount(): void {
     const token = localStorage.getItem('authToken');
     if (!token) return;
@@ -128,13 +116,29 @@ export class ClientLayoutComponent implements OnInit, OnDestroy {
       .subscribe({ next: (count) => this.unreadCount = count, error: () => {} });
   }
 
+  // ── Active case count (badge on My Cases nav item) ────────────────────────
+  private fetchActiveCaseCount(): void {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    this.http.get<any[]>(`${environment.apiUrl}/client/cases`, { headers })
+      .subscribe({
+        next: (cases) => {
+          this.activeCaseCount = cases.filter(
+            c => c.status === 'OPEN' || c.status === 'IN_PROGRESS'
+          ).length;
+        },
+        error: () => {}
+      });
+  }
+
   // ── Breadcrumb ────────────────────────────────────────────────────────────
   private updateBreadcrumb(url: string): void {
-    const match = this.menuItems.find(item => url.startsWith(item.route));
+    const match = this.navRoutes.find(item => url.startsWith(item.route));
     this.currentPageLabel = match ? match.label : 'Dashboard';
   }
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
+  // ── Logout ────────────────────────────────────────────────────────────────
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/auth/login']);

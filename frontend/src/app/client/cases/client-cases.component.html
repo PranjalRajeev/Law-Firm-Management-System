@@ -1,0 +1,447 @@
+<div class="cases-wrapper">
+
+  <!-- ── Page Header ──────────────────────────────────────────────────────── -->
+  <div class="dash-header">
+    <div>
+      <span class="overline">Legal Matters</span>
+      <h1>My <em>Cases</em></h1>
+      <p class="dash-subtitle">Track your active cases and raise new legal requests.</p>
+    </div>
+    <button class="btn-gold" (click)="openRaiseModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Raise Request
+    </button>
+  </div>
+
+  <!-- ── Tab Bar ──────────────────────────────────────────────────────────── -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab === 'cases'" (click)="activeTab = 'cases'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      My Cases
+      <span class="tab-count" *ngIf="cases.length > 0">{{ cases.length }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'requests'" (click)="activeTab = 'requests'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      My Requests
+      <span class="tab-count tab-count--gold" *ngIf="pendingCount > 0">{{ pendingCount }}</span>
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       TAB 1 — MY CASES
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab === 'cases'">
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="lf-select-wrap filter-select-wrap">
+        <select class="filter-select" [(ngModel)]="filterStatus" (change)="applyFilter()">
+          <option value="">All Statuses</option>
+          <option *ngFor="let s of caseStatuses" [value]="s">{{ s.replace('_',' ') }}</option>
+        </select>
+        <svg class="select-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <button class="btn-ghost-sm" *ngIf="filterStatus" (click)="clearFilter()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Clear
+      </button>
+      <span class="filter-count">{{ filteredCases.length }} case{{ filteredCases.length !== 1 ? 's' : '' }}</span>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="isLoadingCases">
+      <span class="spinner-ring"></span>
+      <span>Loading cases…</span>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="!isLoadingCases && filteredCases.length === 0">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <p>No cases found.</p>
+      <button class="btn-outline-sm" (click)="openRaiseModal()">Raise a Request</button>
+    </div>
+
+    <!-- Cases grid -->
+    <div class="cases-grid" *ngIf="!isLoadingCases && filteredCases.length > 0">
+      <div class="case-card" *ngFor="let c of filteredCases" (click)="openDetail(c)">
+
+        <div class="case-card-head">
+          <span class="case-num">{{ c.caseNumber }}</span>
+          <span class="status-badge" [class]="getStatusClass(c.status)">{{ c.status?.replace('_',' ') }}</span>
+        </div>
+
+        <h3 class="case-title">{{ c.title }}</h3>
+
+        <div class="case-meta">
+          <span class="case-type" *ngIf="c.caseType">{{ c.caseType?.replace('_',' ') }}</span>
+          <span class="case-opened">Opened {{ c.dateOpened | date:'d MMM yyyy' }}</span>
+        </div>
+
+        <div class="case-lawyer" *ngIf="c.lawyerName">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          {{ c.lawyerName }}
+        </div>
+        <div class="case-no-lawyer" *ngIf="!c.lawyerName">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          No lawyer assigned yet
+        </div>
+
+        <div class="case-card-footer">
+          <span *ngIf="c.feesCharged" class="case-fee">₹{{ c.feesCharged | number:'1.0-0' }}</span>
+          <span class="case-unread" *ngIf="c.unreadMessages > 0">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            {{ c.unreadMessages }} unread
+          </span>
+          <span class="case-detail-arrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       TAB 2 — MY REQUESTS
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab === 'requests'">
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="isLoadingRequests">
+      <span class="spinner-ring"></span>
+      <span>Loading requests…</span>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="!isLoadingRequests && requests.length === 0">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <p>No requests raised yet.</p>
+      <button class="btn-gold" (click)="openRaiseModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Raise a Request
+      </button>
+    </div>
+
+    <!-- Requests list -->
+    <div class="requests-list" *ngIf="!isLoadingRequests && requests.length > 0">
+      <div class="request-card" *ngFor="let r of requests">
+
+        <div class="request-card-head">
+          <div class="request-head-left">
+            <span class="request-type" *ngIf="r.caseType">{{ r.caseType?.replace('_',' ') }}</span>
+            <span class="urgency-badge" [class]="getUrgencyClass(r.urgency)">{{ r.urgency }}</span>
+          </div>
+          <span class="req-status-badge" [class]="getRequestStatusClass(r.status)">{{ r.status }}</span>
+        </div>
+
+        <h3 class="request-title">{{ r.title }}</h3>
+        <p class="request-desc">{{ r.description }}</p>
+
+        <!-- Status info row -->
+        <div class="request-info">
+          <span class="request-date">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Raised {{ r.createdAt | date:'d MMM yyyy' }}
+          </span>
+
+          <!-- ACCEPTED: show link to the case -->
+          <span class="request-accepted" *ngIf="r.status === 'ACCEPTED'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Accepted by {{ r.lawyerName }}
+            <span *ngIf="r.createdCaseId"> · Case created</span>
+          </span>
+
+          <!-- REJECTED: show reason -->
+          <span class="request-rejected" *ngIf="r.status === 'REJECTED' && r.rejectionReason">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            {{ r.rejectionReason }}
+          </span>
+        </div>
+
+        <!-- Cancel button — only on PENDING -->
+        <div class="request-actions" *ngIf="r.status === 'PENDING'">
+          <button class="btn-danger-sm" (click)="cancelRequest(r.id)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Cancel Request
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     CASE DETAIL SLIDE-OUT PANEL
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div class="detail-backdrop" *ngIf="detailOpen" (click)="closeDetail()"></div>
+
+<div class="detail-panel" [class.open]="detailOpen">
+  <div class="detail-inner" *ngIf="selectedCase">
+
+    <!-- Header -->
+    <div class="detail-head">
+      <div>
+        <span class="case-num">{{ selectedCase.caseNumber }}</span>
+        <h2 class="detail-title">{{ selectedCase.title }}</h2>
+      </div>
+      <button class="detail-close" (click)="closeDetail()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="detail-scroll">
+
+      <!-- Status + badges -->
+      <div class="detail-badges">
+        <span class="status-badge" [class]="getStatusClass(selectedCase.status)">
+          {{ selectedCase.status?.replace('_',' ') }}
+        </span>
+        <span class="case-type" *ngIf="selectedCase.caseType">
+          {{ selectedCase.caseType?.replace('_',' ') }}
+        </span>
+      </div>
+
+      <!-- Status Timeline -->
+      <div class="section-block">
+        <span class="section-label">Case Progress</span>
+        <div class="timeline">
+          <div class="timeline-step"
+               *ngFor="let step of getTimelineSteps(); let last = last"
+               [class.done]="step.done"
+               [class.active]="step.active">
+            <div class="tl-dot">
+              <svg *ngIf="step.done" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="tl-label">{{ step.label }}</span>
+            <div class="tl-line" *ngIf="!last"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lawyer info -->
+      <div class="section-block">
+        <span class="section-label">Assigned Lawyer</span>
+        <div class="detail-lawyer" *ngIf="selectedCase.lawyerName">
+          <div class="dl-avatar">{{ selectedCase.lawyerName?.charAt(0) }}</div>
+          <div class="dl-info">
+            <span class="dl-name">{{ selectedCase.lawyerName }}</span>
+            <span class="dl-spec" *ngIf="selectedCase.lawyerSpecialization">{{ selectedCase.lawyerSpecialization }}</span>
+            <div class="dl-contact">
+              <a *ngIf="selectedCase.lawyerEmail" [href]="'mailto:' + selectedCase.lawyerEmail" class="dl-link">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                {{ selectedCase.lawyerEmail }}
+              </a>
+            </div>
+          </div>
+        </div>
+        <p class="no-lawyer-note" *ngIf="!selectedCase.lawyerName">No lawyer assigned yet.</p>
+      </div>
+
+      <!-- Case details -->
+      <div class="section-block">
+        <span class="section-label">Case Details</span>
+        <div class="detail-grid">
+          <div class="dg-row" *ngIf="selectedCase.courtName">
+            <span class="dg-key">Court</span>
+            <span class="dg-val">{{ selectedCase.courtName }}</span>
+          </div>
+          <div class="dg-row" *ngIf="selectedCase.judgeName">
+            <span class="dg-key">Judge</span>
+            <span class="dg-val">{{ selectedCase.judgeName }}</span>
+          </div>
+          <div class="dg-row" *ngIf="selectedCase.opposingCounsel">
+            <span class="dg-key">Opposing Counsel</span>
+            <span class="dg-val">{{ selectedCase.opposingCounsel }}</span>
+          </div>
+          <div class="dg-row" *ngIf="selectedCase.feesCharged">
+            <span class="dg-key">Fees Charged</span>
+            <span class="dg-val">₹{{ selectedCase.feesCharged | number:'1.0-0' }}</span>
+          </div>
+          <div class="dg-row" *ngIf="selectedCase.settlementAmount">
+            <span class="dg-key">Settlement</span>
+            <span class="dg-val">₹{{ selectedCase.settlementAmount | number:'1.0-0' }}</span>
+          </div>
+          <div class="dg-row" *ngIf="selectedCase.dateOpened">
+            <span class="dg-key">Date Opened</span>
+            <span class="dg-val">{{ selectedCase.dateOpened | date:'mediumDate' }}</span>
+          </div>
+          <div class="dg-row" *ngIf="selectedCase.nextHearingDate">
+            <span class="dg-key">Next Hearing</span>
+            <span class="dg-val">{{ selectedCase.nextHearingDate | date:'medium' }}</span>
+          </div>
+        </div>
+        <p class="detail-description" *ngIf="selectedCase.description">{{ selectedCase.description }}</p>
+      </div>
+
+      <!-- Documents -->
+      <div class="section-block">
+        <span class="section-label">Documents</span>
+        <div class="loading-state loading-state--sm" *ngIf="isLoadingDetail">
+          <span class="spinner-ring spinner-ring--sm"></span>
+        </div>
+        <div class="doc-empty" *ngIf="!isLoadingDetail && caseDocuments.length === 0">
+          No documents attached yet.
+        </div>
+        <div class="doc-list" *ngIf="!isLoadingDetail && caseDocuments.length > 0">
+          <div class="doc-item" *ngFor="let d of caseDocuments">
+            <div class="doc-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <div class="doc-info">
+              <span class="doc-name">{{ d.title }}</span>
+              <span class="doc-meta">{{ d.documentType }} · {{ formatFileSize(d.fileSize) }} · {{ d.uploadedAt | date:'d MMM yyyy' }}</span>
+            </div>
+            <a class="doc-dl" [href]="d.filePath" target="_blank" title="Download">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     RAISE REQUEST MODAL
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="raiseModalOpen" (click)="closeRaiseModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <button class="modal-close" (click)="closeRaiseModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-heading">
+      <span class="overline">New Legal Matter</span>
+      <h3>Raise a Case Request</h3>
+      <p>Describe your legal issue. Available lawyers matching your case type will be notified and can choose to accept.</p>
+    </div>
+
+    <form [formGroup]="raiseForm" (ngSubmit)="submitRequest()" class="modal-form" novalidate>
+
+      <!-- Title -->
+      <div class="lf-field">
+        <label class="lf-label">Request Title</label>
+        <div class="lf-input-wrap" [class.has-error]="raiseForm.get('title')?.invalid && raiseForm.get('title')?.touched">
+          <input class="lf-input" type="text" formControlName="title" placeholder="Brief title of your legal matter" />
+        </div>
+        <span class="lf-error" *ngIf="raiseForm.get('title')?.hasError('required') && raiseForm.get('title')?.touched">Title is required</span>
+      </div>
+
+      <!-- Case type + Urgency -->
+      <div class="field-row">
+        <div class="lf-field">
+          <label class="lf-label">Case Type</label>
+          <div class="lf-input-wrap lf-select-wrap" [class.has-error]="raiseForm.get('caseType')?.invalid && raiseForm.get('caseType')?.touched">
+            <select class="lf-input lf-select" formControlName="caseType">
+              <option value="" disabled>Select type…</option>
+              <option *ngFor="let t of caseTypes" [value]="t">{{ t.replace('_',' ') }}</option>
+            </select>
+            <svg class="select-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <span class="lf-error" *ngIf="raiseForm.get('caseType')?.hasError('required') && raiseForm.get('caseType')?.touched">Required</span>
+        </div>
+
+        <div class="lf-field">
+          <label class="lf-label">Urgency</label>
+          <div class="lf-input-wrap lf-select-wrap">
+            <select class="lf-input lf-select" formControlName="urgency">
+              <option *ngFor="let u of urgencies" [value]="u">{{ u }}</option>
+            </select>
+            <svg class="select-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="lf-field">
+        <label class="lf-label">Description</label>
+        <div class="lf-input-wrap" [class.has-error]="raiseForm.get('description')?.invalid && raiseForm.get('description')?.touched">
+          <textarea class="lf-input lf-textarea" formControlName="description" rows="5"
+            placeholder="Describe your situation in detail. Include relevant dates, parties involved, and what outcome you are seeking. (Minimum 20 characters)"></textarea>
+        </div>
+        <span class="lf-error" *ngIf="raiseForm.get('description')?.hasError('required') && raiseForm.get('description')?.touched">Description is required</span>
+        <span class="lf-error" *ngIf="raiseForm.get('description')?.hasError('minlength') && raiseForm.get('description')?.touched">Minimum 20 characters required</span>
+        <span class="char-count" [class.warn]="raiseForm.get('description')?.value?.length < 20">
+          {{ raiseForm.get('description')?.value?.length || 0 }} chars
+        </span>
+      </div>
+
+      <!-- Info note -->
+      <div class="request-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Your request will be visible to all available lawyers. A lawyer will accept or decline it. You will be notified once a lawyer responds.
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button type="button" class="btn-outline-sm" (click)="closeRaiseModal()">Cancel</button>
+        <button type="submit" class="btn-gold" [disabled]="raiseForm.invalid || isSubmitting">
+          <span *ngIf="!isSubmitting" class="btn-label">
+            Submit Request
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+          <span *ngIf="isSubmitting" class="btn-spinner">
+            <span class="spinner-ring spinner-ring--sm"></span>
+            Submitting…
+          </span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

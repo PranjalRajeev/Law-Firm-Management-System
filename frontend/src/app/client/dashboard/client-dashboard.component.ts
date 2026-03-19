@@ -12,14 +12,14 @@ export class ClientDashboardComponent implements OnInit {
   dashboard: any = null;
   isLoading = true;
 
-  firstName = '';
-  greeting  = 'morning';
+  fullName = '';   // "Elena Hargrove"
+  greeting = '';   // "morning" | "afternoon" | "evening"
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.firstName = localStorage.getItem('firstName') || 'there';
-    this.greeting  = this.getGreeting();
+    this.greeting = this.getGreeting();
+    this.fullName = this.getFullName();
     this.loadDashboard();
   }
 
@@ -33,8 +33,20 @@ export class ClientDashboardComponent implements OnInit {
     this.http.get<any>(`${environment.apiUrl}/client/dashboard`, { headers: this.getHeaders() })
       .subscribe({
         next:  (data) => { this.dashboard = data; this.isLoading = false; },
-        error: (err)  => { console.error(err); this.isLoading = false; }
+        error: (err)  => { console.error(err);    this.isLoading = false; }
       });
+  }
+
+  // Builds "Elena Hargrove" from localStorage — falls back to username, then "Client"
+  private getFullName(): string {
+    const firstName = (localStorage.getItem('firstName') || '').trim();
+    const lastName  = (localStorage.getItem('lastName')  || '').trim();
+
+    if (firstName && lastName) return `${firstName} ${lastName}`;
+    if (firstName)             return firstName;
+
+    const username = (localStorage.getItem('username') || '').trim();
+    return username || 'Client';
   }
 
   private getGreeting(): string {

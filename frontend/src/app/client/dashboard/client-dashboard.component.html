@@ -12,7 +12,8 @@
     <div class="dash-header">
       <div>
         <span class="overline">Client Portal</span>
-        <h1>Good {{ greeting }}, <em>{{ firstName }}</em></h1>
+        <!-- fullName shows "Elena Hargrove", greeting changes by time of day -->
+        <h1>Good {{ greeting }}, <em>{{ fullName }}</em></h1>
         <p class="dash-subtitle">Here's a summary of your legal matters.</p>
       </div>
       <button class="btn-gold" (click)="loadDashboard()">
@@ -105,13 +106,16 @@
         <div class="panel-body">
           <div class="no-data" *ngIf="!dashboard.assignedLawyer">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" class="no-data-icon">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
             </svg>
             <p>No lawyer assigned yet.</p>
           </div>
+
           <div class="lawyer-card" *ngIf="dashboard.assignedLawyer">
+            <!-- charAt(0) instead of | slice to avoid pipe errors -->
             <div class="lawyer-avatar">
-              {{ dashboard.assignedLawyer.fullName | slice:0:1 }}
+              {{ dashboard.assignedLawyer.fullName?.charAt(0) }}
             </div>
             <div class="lawyer-info">
               <h3 class="lawyer-name">{{ dashboard.assignedLawyer.fullName }}</h3>
@@ -120,7 +124,10 @@
               </span>
               <div class="lawyer-meta">
                 <span *ngIf="dashboard.assignedLawyer.yearsOfExperience">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
                   {{ dashboard.assignedLawyer.yearsOfExperience }} yrs experience
                 </span>
                 <span *ngIf="dashboard.assignedLawyer.barNumber">
@@ -129,11 +136,16 @@
               </div>
             </div>
             <div class="lawyer-contact">
-              <a class="contact-btn" [href]="'mailto:' + dashboard.assignedLawyer.email" title="Email">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <a class="contact-btn" [href]="'mailto:' + dashboard.assignedLawyer.email" title="Email lawyer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
               </a>
-              <button class="contact-btn" routerLink="/client/messages" title="Message">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <button class="contact-btn" routerLink="/client/messages" title="Message lawyer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
               </button>
             </div>
           </div>
@@ -150,7 +162,7 @@
           <a class="panel-link" routerLink="/client/hearings">View all</a>
         </div>
         <div class="panel-body panel-body--flush">
-          <div class="no-data-inline" *ngIf="dashboard.upcomingHearings?.length === 0">
+          <div class="no-data-inline" *ngIf="!dashboard.upcomingHearings || dashboard.upcomingHearings.length === 0">
             No upcoming hearings scheduled.
           </div>
           <div class="hearing-list" *ngIf="dashboard.upcomingHearings?.length > 0">
@@ -197,15 +209,23 @@
               </tr>
             </thead>
             <tbody>
-              <tr class="lf-row" *ngFor="let c of dashboard.recentCases" [routerLink]="['/client/cases', c.id]">
+              <tr class="lf-row" *ngFor="let c of dashboard.recentCases">
                 <td><span class="case-num">{{ c.caseNumber }}</span></td>
                 <td class="cell-title">{{ c.title }}</td>
                 <td><span class="type-badge" *ngIf="c.caseType">{{ c.caseType }}</span></td>
-                <td><span class="status-badge" [class]="'csb--' + c.status?.toLowerCase()">{{ c.status }}</span></td>
-                <td class="cell-muted">{{ c.nextHearingDate ? (c.nextHearingDate | date:'mediumDate') : '—' }}</td>
-                <td class="cell-muted">{{ c.feesCharged ? (c.feesCharged | number:'1.0-0') : '—' }}</td>
+                <td>
+                  <span class="status-badge" [class]="'csb--' + c.status?.toLowerCase()">
+                    {{ c.status }}
+                  </span>
+                </td>
+                <td class="cell-muted">
+                  {{ c.nextHearingDate ? (c.nextHearingDate | date:'mediumDate') : '—' }}
+                </td>
+                <td class="cell-muted">
+                  {{ c.feesCharged ? (c.feesCharged | number:'1.0-0') : '—' }}
+                </td>
               </tr>
-              <tr *ngIf="dashboard.recentCases?.length === 0">
+              <tr *ngIf="!dashboard.recentCases || dashboard.recentCases.length === 0">
                 <td colspan="6" class="no-data"><p>No cases found.</p></td>
               </tr>
             </tbody>

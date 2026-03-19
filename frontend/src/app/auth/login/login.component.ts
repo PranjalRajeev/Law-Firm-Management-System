@@ -36,7 +36,7 @@ export function strictEmailValidator(): ValidatorFn {
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
-  // ── Login form (your original fields) ──────────────────────────────────────
+  // ── Login form ──────────────────────────────────────────────────────────────
   loginForm: FormGroup;
   isLoading    = false;
   hidePassword = true;
@@ -76,7 +76,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  // ── Your original submit + role-based redirect (unchanged) ─────────────────
+  // ── Login + role-based redirect ─────────────────────────────────────────────
   onSubmit(): void {
     if (this.loginForm.valid) {
       this.isLoading = true;
@@ -88,6 +88,15 @@ export class LoginComponent implements OnInit {
       this.authService.login(loginRequest).subscribe({
         next: (response) => {
           this.isLoading = false;
+
+          // ── Save all user info so every component can read it ──────────────
+          localStorage.setItem('authToken',  response.token);
+          localStorage.setItem('userId',     String(response.id ?? ''));
+          localStorage.setItem('username',   response.username  ?? '');
+          localStorage.setItem('firstName',  response.firstName ?? '');
+          localStorage.setItem('lastName',   response.lastName  ?? '');
+          localStorage.setItem('userRole',   response.role      ?? '');
+
           this.snackBar.open('Login successful!', 'Close', {
             duration: 3000,
             panelClass: ['success-snackbar']
@@ -143,7 +152,7 @@ export class LoginComponent implements OnInit {
 
     const email = (this.forgotForm.value.email as string).trim().toLowerCase();
 
-    // Wire up your AuthService call here, e.g.:
+    // Wire up your AuthService call here:
     // this.authService.forgotPassword({ email }).subscribe({
     //   next: () => { this.forgotLoading = false; this.forgotSuccess = true; },
     //   error: (err) => { this.forgotLoading = false; this.forgotError = err?.error?.message || 'Something went wrong.'; }

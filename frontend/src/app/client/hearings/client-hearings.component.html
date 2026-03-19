@@ -1,0 +1,248 @@
+<!-- src/app/client/hearings/client-hearings.component.html -->
+
+<div class="hearings-page">
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       Page Header
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Hearings</h1>
+      <p class="page-sub">Track all your scheduled and past court appearances.</p>
+    </div>
+    <div class="header-counters" *ngIf="grouped">
+      <div class="counter-chip">
+        <span class="counter-num">{{ grouped.totalUpcoming }}</span>
+        <span class="counter-lbl">Upcoming</span>
+      </div>
+      <div class="counter-divider"></div>
+      <div class="counter-chip">
+        <span class="counter-num dim">{{ grouped.totalPast }}</span>
+        <span class="counter-lbl">Past</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       Loading
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="state-loading" *ngIf="loading">
+    <mat-progress-spinner mode="indeterminate" diameter="36" color="accent"></mat-progress-spinner>
+    <span>Loading hearings…</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       Error
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="state-error" *ngIf="error && !loading">
+    <mat-icon>error_outline</mat-icon>
+    {{ error }}
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       Content
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="!loading && !error && grouped">
+
+    <!-- ── Next Hearing Banner ──────────────────────────────────────────────── -->
+    <div class="next-banner" *ngIf="grouped.upcoming.length > 0">
+      <div class="banner-inner">
+        <div class="banner-date-tile">
+          <span class="tile-day">{{ getDay(grouped.upcoming[0].hearingDate) }}</span>
+          <span class="tile-mon">{{ getMonth(grouped.upcoming[0].hearingDate) }}</span>
+        </div>
+        <div class="banner-info">
+          <p class="banner-eyebrow">Next Hearing</p>
+          <h3 class="banner-title">{{ grouped.upcoming[0].title }}</h3>
+          <div class="banner-meta">
+            <span>
+              <mat-icon class="meta-icon">gavel</mat-icon>
+              {{ grouped.upcoming[0].caseTitle }}
+            </span>
+            <span class="meta-sep">·</span>
+            <span>
+              <mat-icon class="meta-icon">schedule</mat-icon>
+              {{ getTime(grouped.upcoming[0].hearingDate) }}
+            </span>
+            <span class="meta-sep">·</span>
+            <span>
+              <mat-icon class="meta-icon">location_on</mat-icon>
+              {{ grouped.upcoming[0].courtName || 'TBD' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="banner-right">
+        <div class="countdown">
+          <span class="countdown-num">{{ daysUntil(grouped.upcoming[0].hearingDate) }}</span>
+          <span class="countdown-lbl">days away</span>
+        </div>
+        <button mat-raised-button class="btn-gold" (click)="openDetail(grouped.upcoming[0])">
+          View Details
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Two-column layout: list + detail panel ───────────────────────────── -->
+    <div class="content-columns">
+
+      <!-- LEFT: tab list -->
+      <div class="list-column">
+
+        <!-- Tabs -->
+        <div class="tab-bar">
+          <button class="tab-btn" [class.active]="activeTab === 'upcoming'" (click)="setTab('upcoming')">
+            Upcoming
+            <span class="tab-count">{{ grouped.totalUpcoming }}</span>
+          </button>
+          <button class="tab-btn" [class.active]="activeTab === 'past'" (click)="setTab('past')">
+            Past
+            <span class="tab-count dim">{{ grouped.totalPast }}</span>
+          </button>
+        </div>
+
+        <!-- Empty state -->
+        <div class="state-empty" *ngIf="displayList.length === 0">
+          <mat-icon>event_busy</mat-icon>
+          <p>No {{ activeTab }} hearings found.</p>
+        </div>
+
+        <!-- Hearing rows -->
+        <div class="hearing-list">
+          <div
+            class="hearing-row"
+            *ngFor="let h of displayList"
+            [class.hearing-row--active]="selectedHearing?.id === h.id"
+            [class.hearing-row--past]="activeTab === 'past'"
+            (click)="openDetail(h)">
+
+            <!-- Date pill -->
+            <div class="row-date">
+              <span class="row-day">{{ getDay(h.hearingDate) }}</span>
+              <span class="row-mon">{{ getMonth(h.hearingDate) }}</span>
+            </div>
+
+            <!-- Info -->
+            <div class="row-body">
+              <div class="row-title-line">
+                <span class="row-title">{{ h.title }}</span>
+                <span class="badge" [ngClass]="statusClass(h.status)">{{ statusLabel(h.status) }}</span>
+              </div>
+              <div class="row-sub">
+                <mat-icon class="row-icon">gavel</mat-icon>
+                {{ h.caseTitle }}
+                <span class="case-num" *ngIf="h.caseNumber">&nbsp;#{{ h.caseNumber }}</span>
+              </div>
+              <div class="row-meta">
+                <span *ngIf="h.courtName">
+                  <mat-icon class="row-icon">location_on</mat-icon>{{ h.courtName }}
+                  <ng-container *ngIf="h.courtRoom">&nbsp;· {{ h.courtRoom }}</ng-container>
+                </span>
+                <span>
+                  <mat-icon class="row-icon">schedule</mat-icon>{{ getTime(h.hearingDate) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Arrow -->
+            <mat-icon class="row-arrow">chevron_right</mat-icon>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: detail panel -->
+      <div class="detail-panel" *ngIf="selectedHearing" [@slideIn]>
+
+        <!-- Panel header -->
+        <div class="dp-header">
+          <div class="dp-date-tile">
+            <span class="dpt-day">{{ getDay(selectedHearing.hearingDate) }}</span>
+            <span class="dpt-mon">{{ getMonth(selectedHearing.hearingDate) }}</span>
+            <span class="dpt-year">{{ getYear(selectedHearing.hearingDate) }}</span>
+          </div>
+          <div class="dp-header-info">
+            <div class="dp-case-num" *ngIf="selectedHearing.caseNumber">
+              #{{ selectedHearing.caseNumber }}
+            </div>
+            <h2 class="dp-title">{{ selectedHearing.title }}</h2>
+            <span class="badge badge--lg" [ngClass]="statusClass(selectedHearing.status)">
+              {{ statusLabel(selectedHearing.status) }}
+            </span>
+          </div>
+          <button class="dp-close-btn" (click)="closeDetail()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <!-- Time -->
+        <div class="dp-time-row">
+          <mat-icon>schedule</mat-icon>
+          <span>{{ getFullDate(selectedHearing.hearingDate) }}</span>
+          <span class="time-sep">·</span>
+          <span class="time-value">{{ getTime(selectedHearing.hearingDate) }}</span>
+        </div>
+
+        <div class="dp-divider"></div>
+
+        <!-- Detail cards grid -->
+        <div class="dp-cards">
+
+          <div class="dp-card" *ngIf="selectedHearing.courtName">
+            <div class="dp-card-label">
+              <mat-icon>location_on</mat-icon> Venue
+            </div>
+            <div class="dp-card-value">{{ selectedHearing.courtName }}</div>
+            <div class="dp-card-sub" *ngIf="selectedHearing.courtRoom">
+              {{ selectedHearing.courtRoom }}
+            </div>
+          </div>
+
+          <div class="dp-card" *ngIf="selectedHearing.judgeName">
+            <div class="dp-card-label">
+              <mat-icon>person</mat-icon> Presiding Judge
+            </div>
+            <div class="dp-card-value">{{ selectedHearing.judgeName }}</div>
+          </div>
+
+          <div class="dp-card">
+            <div class="dp-card-label">
+              <mat-icon>gavel</mat-icon> Case
+            </div>
+            <div class="dp-card-value">{{ selectedHearing.caseTitle }}</div>
+            <div class="dp-card-sub" *ngIf="selectedHearing.caseNumber">
+              Case #{{ selectedHearing.caseNumber }}
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Description -->
+        <ng-container *ngIf="selectedHearing.description">
+          <div class="dp-section-label">
+            <mat-icon>description</mat-icon> Description
+          </div>
+          <div class="dp-text-block">{{ selectedHearing.description }}</div>
+        </ng-container>
+
+        <!-- Notes -->
+        <ng-container *ngIf="selectedHearing.notes">
+          <div class="dp-section-label">
+            <mat-icon>sticky_note_2</mat-icon> Advocate's Notes
+          </div>
+          <div class="dp-text-block dp-text-block--notes">{{ selectedHearing.notes }}</div>
+        </ng-container>
+
+      </div>
+
+      <!-- Right panel empty state -->
+      <div class="detail-panel detail-panel--empty" *ngIf="!selectedHearing && displayList.length > 0">
+        <mat-icon>touch_app</mat-icon>
+        <p>Select a hearing to view details</p>
+      </div>
+
+    </div>
+
+  </ng-container>
+</div>

@@ -308,14 +308,42 @@ public class ClientServiceImpl implements ClientService {
     // ── Billing ───────────────────────────────────────────────────────────────
     @Override
     public InvoiceDto.BillingSummary getBillingSummary(String username) {
+        // 1. Sum feesCharged across all cases for this client
+        List<Case> cases = caseRepository.findByClientUsername(username);
+        double totalCaseFees = cases.stream()
+                .filter(c -> c.getFeesCharged() != null)
+                .mapToDouble(Case::getFeesCharged)
+                .sum();
+
+        // 2. Sum totalAmount across all invoices for this client
+        double totalInvoiced = invoiceRepository.getTotalInvoicedByClientUsername(username);
+
+        // 3. Remaining balance = fees agreed but not yet invoiced
+        double remainingBalance = totalCaseFees - totalInvoiced;
+
+        // 4. Amount currently due (unpaid + overdue invoices)
         double totalDue  = invoiceRepository.getTotalDueByClientUsername(username);
+
+        // 5. Amount already collected (paid invoices)
         double totalPaid = invoiceRepository.getTotalPaidByClientUsername(username);
-        long unpaid   = invoiceRepository.countByClientUsernameAndStatus(username, Invoice.InvoiceStatus.UNPAID);
-        long overdue  = invoiceRepository.countByClientUsernameAndStatus(username, Invoice.InvoiceStatus.OVERDUE);
-        long paid     = invoiceRepository.countByClientUsernameAndStatus(username, Invoice.InvoiceStatus.PAID);
-        long partial  = invoiceRepository.countByClientUsernameAndStatus(username, Invoice.InvoiceStatus.PARTIALLY_PAID);
-        // 6-arg constructor: totalDue, totalPaid, unpaid, overdue, paid, partial
-        return new InvoiceDto.BillingSummary(totalDue, totalPaid, unpaid, overdue, paid, partial);
+
+        // 6. Invoice counts by status
+        long unpaid  = invoiceRepository.countByClientUsernameAndStatus(username, Invoice.InvoiceStatus.UNPAID);
+        long overdue = invoiceRepository.countByClientUsernameAndStatus(username, Invoice.InvoiceStatus.OVERDUE);
+        long paid    = invoiceRepository.countByClientUsernameAndStatus(username, Invoice.InvoiceStatus.PAID);
+        long partial = invoiceRepository.countByClientUsernameAndStatus(username, Invoice.InvoiceStatus.PARTIALLY_PAID);
+
+        return new InvoiceDto.BillingSummary(
+                totalCaseFees,
+                totalInvoiced,
+                remainingBalance,
+                totalDue,
+                totalPaid,
+                unpaid,
+                overdue,
+                paid,
+                partial
+        );
     }
 
     @Override

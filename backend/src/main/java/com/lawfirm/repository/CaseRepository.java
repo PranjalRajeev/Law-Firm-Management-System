@@ -77,4 +77,12 @@ public interface CaseRepository extends JpaRepository<Case, Long> {
 
     @Query("SELECT c FROM Case c WHERE c.assignedLawyer.username = :username ORDER BY c.createdAt DESC")
     List<Case> findByAssignedLawyerUsername(@Param("username") String username);
+
+    // Total feesCharged across all cases for a lawyer
+@Query("SELECT COALESCE(SUM(c.feesCharged),0) FROM Case c WHERE c.assignedLawyer.username = :username")
+Double getTotalFeesByLawyerUsername(@Param("username") String username);
+
+// Total feesCharged across all cases for a client
+@Query("SELECT COALESCE(SUM(c.feesCharged),0) FROM Case c WHERE c.client.username = :username")
+Double getTotalFeesByClientUsername(@Param("username") String username);
 }

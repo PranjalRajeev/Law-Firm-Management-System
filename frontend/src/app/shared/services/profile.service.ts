@@ -11,24 +11,46 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
 
-  private base = `${environment.apiUrl}/client/profile`;
+  private clientBase = `${environment.apiUrl}/client/profile`;
+  private lawyerBase = `${environment.apiUrl}/lawyer/profile`;
 
   constructor(private http: HttpClient) {}
 
+  // ── Client ────────────────────────────────────────────────────────────────
+
   /** GET /api/client/profile */
   getProfile(): Observable<UserDto> {
-    return this.http.get<UserDto>(this.base);
+    return this.http.get<UserDto>(this.clientBase);
   }
 
   /** PUT /api/client/profile */
   updateProfile(request: UpdateProfileRequest): Observable<UserDto> {
-    return this.http.put<UserDto>(this.base, request);
+    return this.http.put<UserDto>(this.clientBase, request);
   }
 
   /** PUT /api/client/profile/change-password */
   changePassword(request: ChangePasswordRequest): Observable<void> {
-    return this.http.put<void>(`${this.base}/change-password`, request);
+    return this.http.put<void>(`${this.clientBase}/change-password`, request);
   }
+
+  // ── Lawyer ────────────────────────────────────────────────────────────────
+
+  /** GET /api/lawyer/profile */
+  getLawyerProfile(): Observable<UserDto> {
+    return this.http.get<UserDto>(this.lawyerBase);
+  }
+
+  /** PUT /api/lawyer/profile */
+  updateLawyerProfile(request: UpdateProfileRequest): Observable<UserDto> {
+    return this.http.put<UserDto>(this.lawyerBase, request);
+  }
+
+  /** PUT /api/lawyer/profile/change-password */
+  changeLawyerPassword(request: ChangePasswordRequest): Observable<void> {
+    return this.http.put<void>(`${this.lawyerBase}/change-password`, request);
+  }
+
+  // ── Shared helpers ────────────────────────────────────────────────────────
 
   /** Get initials from full name for avatar */
   getInitials(firstName: string, lastName: string): string {

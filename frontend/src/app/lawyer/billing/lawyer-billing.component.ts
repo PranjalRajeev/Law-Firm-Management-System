@@ -63,15 +63,16 @@ export class LawyerBillingComponent implements OnInit {
     this.loadCases();
   }
 
-  private get headers(): HttpHeaders {
-    const token = localStorage.getItem('authToken');
-    return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-  }
+  // private get headers(): HttpHeaders {
+  //   const token = localStorage.getItem('authToken');
+  //   return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+  // }
+
 
   // ── Load ──────────────────────────────────────────────────────────────────
   loadSummary(): void {
     this.isLoadingSummary = true;
-    this.http.get<any>(`${environment.apiUrl}/lawyer/billing/summary`, { headers: this.headers })
+    this.http.get<any>(`${environment.apiUrl}/lawyer/billing/summary`)
       .subscribe({
         next: (d) => { this.summary = d; this.isLoadingSummary = false; },
         error: (err) => {
@@ -83,7 +84,7 @@ export class LawyerBillingComponent implements OnInit {
 
   loadInvoices(): void {
     this.isLoadingInvoices = true;
-    this.http.get<any[]>(`${environment.apiUrl}/lawyer/billing/invoices`, { headers: this.headers })
+    this.http.get<any[]>(`${environment.apiUrl}/lawyer/billing/invoices`)
       .subscribe({
         next: (d) => {
           this.invoices          = d;
@@ -100,7 +101,7 @@ export class LawyerBillingComponent implements OnInit {
 
   loadCases(): void {
     this.isLoadingCases = true;
-    this.http.get<any[]>(`${environment.apiUrl}/lawyer/cases`, { headers: this.headers })
+    this.http.get<any[]>(`${environment.apiUrl}/lawyer/cases`)
       .subscribe({
         next: (d) => {
           // Only show OPEN or IN_PROGRESS cases for billing
@@ -183,8 +184,7 @@ export class LawyerBillingComponent implements OnInit {
   // ── Detail panel ──────────────────────────────────────────────────────────
   openDetail(inv: any): void {
     this.http.get<any>(
-      `${environment.apiUrl}/lawyer/billing/invoices/${inv.id}`,
-      { headers: this.headers }
+      `${environment.apiUrl}/lawyer/billing/invoices/${inv.id}`
     ).subscribe({
       next: (d) => { this.selectedInvoice = d; this.detailOpen = true; },
       error: (err) => { console.error('Detail load error:', err); }
@@ -248,8 +248,7 @@ export class LawyerBillingComponent implements OnInit {
 
     this.http.post<any>(
       `${environment.apiUrl}/lawyer/billing/invoices`,
-      payload,
-      { headers: this.headers }
+      payload
     ).subscribe({
       next: (inv) => {
         console.log('Invoice created:', inv);
@@ -321,8 +320,7 @@ export class LawyerBillingComponent implements OnInit {
 
     this.http.patch<any>(
       `${environment.apiUrl}/lawyer/billing/invoices/${this.updatingInvoice.id}/status`,
-      payload,
-      { headers: this.headers }
+      payload
     ).subscribe({
       next: (updated) => {
         const idx = this.invoices.findIndex(i => i.id === updated.id);
@@ -348,8 +346,7 @@ export class LawyerBillingComponent implements OnInit {
     event.stopPropagation();
     if (!confirm(`Delete ${inv.invoiceNumber}? This cannot be undone.`)) return;
     this.http.delete(
-      `${environment.apiUrl}/lawyer/billing/invoices/${inv.id}`,
-      { headers: this.headers }
+      `${environment.apiUrl}/lawyer/billing/invoices/${inv.id}`
     ).subscribe({
       next: () => {
         this.invoices         = this.invoices.filter(i => i.id !== inv.id);

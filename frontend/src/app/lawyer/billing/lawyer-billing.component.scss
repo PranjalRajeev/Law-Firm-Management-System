@@ -420,6 +420,95 @@ $ease: cubic-bezier(.4,0,.2,1); $ease-out: cubic-bezier(0,0,.2,1);
   margin-top: .5rem; padding-top: 1.25rem; border-top: 1px solid $border-soft;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// APPEND TO lawyer-billing.component.scss
+// New styles for: fees summary row, remaining balance card, progress bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Fees summary row (sits below the main 4-card grid) ────────────────────────
+.fees-summary-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) 1fr;
+  gap: 1px;
+  background: $border;
+  border: 1px solid $border;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 1.75rem;
+
+  // Progress block stretches full width of its own row below the 3 cards
+  .fees-progress-block {
+    grid-column: 1 / -1;
+    background: $ink-soft;
+    padding: 1rem 1.375rem;
+    border-top: 1px solid $border-soft;
+  }
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+    .fees-progress-block { grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Variant cards for fees / invoiced / remaining ─────────────────────────────
+.stat-card--fees {
+  &:hover::after { background: $gold; }
+}
+
+.stat-card--invoiced {
+  &:hover::after { background: $green; }
+}
+
+.stat-card--remaining {
+  &:hover::after { background: $gold-light; }
+}
+
+// Gold-tinted icon wrap
+.stat-icon-wrap--gold {
+  background: rgba($gold, .08);
+  border-color: rgba($gold, .2);
+  color: $gold;
+}
+
+// Gold-coloured value for remaining balance
+.stat-value--gold {
+  color: $gold;
+}
+
+// ── Fees progress bar ─────────────────────────────────────────────────────────
+.fees-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: .72rem;
+  color: $muted;
+  margin-bottom: .4rem;
+}
+
+.fees-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba($parchment, .07);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.fees-progress-fill {
+  height: 100%;
+  background: $gold;
+  border-radius: 3px;
+  transition: width .9s cubic-bezier(0, 0, .2, 1);
+}
+
+.fees-progress-sub {
+  font-size: .7rem;
+  color: $muted;
+  margin-top: .4rem;
+}
+
 // ── Keyframes ─────────────────────────────────────────────────────────────────
 @keyframes fadeUp    { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
 @keyframes backdropIn{ from { opacity:0; } to { opacity:1; } }

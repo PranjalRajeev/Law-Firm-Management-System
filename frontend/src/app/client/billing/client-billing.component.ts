@@ -75,21 +75,17 @@ export class ClientBillingComponent implements OnInit {
   applyFilters(): void {
     let list = [...this.invoices];
 
-    // Tab filter
     if (this.activeTab === 'pending')
       list = list.filter(i => ['UNPAID','PARTIALLY_PAID','OVERDUE'].includes(i.status));
     else if (this.activeTab === 'paid')
       list = list.filter(i => i.status === 'PAID');
 
-    // Status dropdown
     if (this.selectedStatus)
       list = list.filter(i => i.status === this.selectedStatus);
 
-    // Type dropdown
     if (this.selectedType)
       list = list.filter(i => i.invoiceType === this.selectedType);
 
-    // Search
     if (this.searchKeyword.trim()) {
       const kw = this.searchKeyword.toLowerCase();
       list = list.filter(i =>
@@ -152,16 +148,40 @@ export class ClientBillingComponent implements OnInit {
     return Math.min(100, Math.round((inv.paidAmount / inv.totalAmount) * 100));
   }
 
+  // ── Fee progress bar (totalInvoiced vs totalCaseFees) ─────────────────────
+  invoicedPercent(): number {
+    if (!this.summary?.totalCaseFees || this.summary.totalCaseFees === 0) return 0;
+    return Math.min(100, Math.round((this.summary.totalInvoiced / this.summary.totalCaseFees) * 100));
+  }
+
+  // ── Show remaining balance banner only when balance > 0 ───────────────────
+  get hasRemainingBalance(): boolean {
+    return (this.summary?.remainingBalance ?? 0) > 0;
+  }
+
   get activeFilterCount(): number {
     return [this.selectedStatus, this.selectedType, this.searchKeyword]
       .filter(v => !!v).length;
   }
 
+  // ── Display getters ───────────────────────────────────────────────────────
   get totalDueDisplay(): string {
     return this.formatCurrency(this.summary?.totalDue ?? 0);
   }
 
   get totalPaidDisplay(): string {
     return this.formatCurrency(this.summary?.totalPaid ?? 0);
+  }
+
+  get totalCaseFeesDisplay(): string {
+    return this.formatCurrency(this.summary?.totalCaseFees ?? 0);
+  }
+
+  get totalInvoicedDisplay(): string {
+    return this.formatCurrency(this.summary?.totalInvoiced ?? 0);
+  }
+
+  get remainingBalanceDisplay(): string {
+    return this.formatCurrency(this.summary?.remainingBalance ?? 0);
   }
 }

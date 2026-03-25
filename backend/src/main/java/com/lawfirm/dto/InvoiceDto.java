@@ -78,31 +78,41 @@ public class InvoiceDto {
  
     // ── Nested: BillingSummary ────────────────────────────────────────────────
     public static class BillingSummary {
-        private double totalDue;
-        private double totalPaid;
-        private long   unpaidCount;
-        private long   overdueCount;
-        private long   paidCount;
-        private long   partialCount;
- 
-        public BillingSummary(double totalDue, double totalPaid,
-                              long unpaidCount, long overdueCount,
-                              long paidCount, long partialCount) {
-            this.totalDue     = totalDue;
-            this.totalPaid    = totalPaid;
-            this.unpaidCount  = unpaidCount;
-            this.overdueCount = overdueCount;
-            this.paidCount    = paidCount;
-            this.partialCount = partialCount;
-        }
- 
-        public double getTotalDue()     { return totalDue; }
-        public double getTotalPaid()    { return totalPaid; }
-        public long   getUnpaidCount()  { return unpaidCount; }
-        public long   getOverdueCount() { return overdueCount; }
-        public long   getPaidCount()    { return paidCount; }
-        public long   getPartialCount() { return partialCount; }
+    private double totalCaseFees;      // sum of feesCharged across all cases
+    private double totalInvoiced;      // sum of all invoice totalAmounts
+    private double remainingBalance;   // totalCaseFees - totalInvoiced
+    private double totalDue;           // unpaid/overdue invoice amounts
+    private double totalPaid;          // paid invoice amounts
+    private long   unpaidCount;
+    private long   overdueCount;
+    private long   paidCount;
+    private long   partialCount;
+
+    public BillingSummary(double totalCaseFees, double totalInvoiced,
+                          double remainingBalance, double totalDue,
+                          double totalPaid, long unpaidCount,
+                          long overdueCount, long paidCount, long partialCount) {
+        this.totalCaseFees     = totalCaseFees;
+        this.totalInvoiced     = totalInvoiced;
+        this.remainingBalance  = remainingBalance;
+        this.totalDue          = totalDue;
+        this.totalPaid         = totalPaid;
+        this.unpaidCount       = unpaidCount;
+        this.overdueCount      = overdueCount;
+        this.paidCount         = paidCount;
+        this.partialCount      = partialCount;
     }
+
+    public double getTotalCaseFees()    { return totalCaseFees; }
+    public double getTotalInvoiced()    { return totalInvoiced; }
+    public double getRemainingBalance() { return remainingBalance; }
+    public double getTotalDue()         { return totalDue; }
+    public double getTotalPaid()        { return totalPaid; }
+    public long   getUnpaidCount()      { return unpaidCount; }
+    public long   getOverdueCount()     { return overdueCount; }
+    public long   getPaidCount()        { return paidCount; }
+    public long   getPartialCount()     { return partialCount; }
+}
  
     // ── Getters and Setters ───────────────────────────────────────────────────
     public Long getId() { return id; } public void setId(Long id) { this.id = id; }

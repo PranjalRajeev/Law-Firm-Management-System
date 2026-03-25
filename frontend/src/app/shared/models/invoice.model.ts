@@ -26,11 +26,15 @@ export interface InvoiceDto {
 }
 
 export interface BillingSummary {
-  totalDue: number;
-  totalPaid: number;
-  unpaidCount: number;
-  overdueCount: number;
-  paidCount: number;
+  totalCaseFees:    number;   // ₹20,000
+  totalInvoiced:    number;   // ₹7,000
+  remainingBalance: number;   // ₹13,000
+  totalDue:         number;   // unpaid invoice amounts
+  totalPaid:        number;
+  unpaidCount:      number;
+  overdueCount:     number;
+  paidCount:        number;
+  partialCount:     number;
 }
 
 export type InvoiceStatus =

@@ -35,7 +35,7 @@ import { LawyerClientsComponent }   from './clients/lawyer-clients.component';
 
 // Uncomment as you build each section:
 import { LawyerBillingComponent }   from './billing/lawyer-billing.component';
-// import { LawyerProfileComponent }   from './profile/lawyer-profile.component';
+import { LawyerProfileComponent }   from './profile/lawyer-profile.component';
 
 @NgModule({
   declarations: [
@@ -49,7 +49,7 @@ import { LawyerBillingComponent }   from './billing/lawyer-billing.component';
 
     // Uncomment as you build each section:
     LawyerBillingComponent,
-    // LawyerProfileComponent,
+    LawyerProfileComponent,
   ],
 
   imports: [
@@ -71,7 +71,7 @@ import { LawyerBillingComponent }   from './billing/lawyer-billing.component';
           { path: 'clients',   component: LawyerClientsComponent },
 
           { path: 'billing',   component: LawyerBillingComponent },
-          // { path: 'profile',   component: LawyerProfileComponent },
+          { path: 'profile',   component: LawyerProfileComponent },
         ]
       }
     ]),

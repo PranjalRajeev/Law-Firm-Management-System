@@ -82,9 +82,19 @@ public class LawyerServiceImpl implements LawyerService {
     }
 
     @Override
-    public CaseDto getCaseDetail(String username, Long caseId) {
-        return CaseDto.fromEntity(resolveCase(username, caseId));
-    }
+public CaseDto getCaseDetail(String username, Long caseId) {
+    Case c = resolveCase(username, caseId);
+    CaseDto dto = CaseDto.fromEntity(c);
+
+    // Populate billing fields
+    double totalFees     = c.getFeesCharged() != null ? c.getFeesCharged() : 0.0;
+    double totalInvoiced = invoiceRepository.getTotalInvoicedByCaseId(caseId);
+    dto.setTotalFees(totalFees);
+    dto.setTotalInvoiced(totalInvoiced);
+    dto.setRemainingBalance(Math.max(0.0, totalFees - totalInvoiced));
+
+    return dto;
+}
 
     @Override
     @Transactional(readOnly = false)
@@ -110,8 +120,11 @@ public class LawyerServiceImpl implements LawyerService {
     // ── Case Requests ─────────────────────────────────────────────────────────
     @Override
     public List<CaseRequestDto> getPendingRequests(String username) {
-        return caseRequestRepository.findAllPendingOrderedByUrgency()
-                .stream().map(CaseRequestDto::fromEntity).collect(Collectors.toList());
+        return caseRequestRepository.findAllPendingRequestsWithClient(CaseRequest.RequestStatus.PENDING)
+                .stream()
+                .sorted(Comparator.comparing(CaseRequest::getUrgency).reversed().thenComparing(CaseRequest::getCreatedAt))
+                .map(CaseRequestDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -119,8 +132,11 @@ public class LawyerServiceImpl implements LawyerService {
         if (caseType == null || caseType.isBlank()) return getPendingRequests(username);
         try {
             Case.CaseType type = Case.CaseType.valueOf(caseType.toUpperCase());
-            return caseRequestRepository.findPendingByCaseType(type)
-                    .stream().map(CaseRequestDto::fromEntity).collect(Collectors.toList());
+            return caseRequestRepository.findPendingByCaseTypeWithClient(CaseRequest.RequestStatus.PENDING, type)
+                    .stream()
+                    .sorted(Comparator.comparing(CaseRequest::getUrgency).reversed().thenComparing(CaseRequest::getCreatedAt))
+                    .map(CaseRequestDto::fromEntity)
+                    .collect(Collectors.toList());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid case type");
         }
@@ -469,15 +485,22 @@ public class LawyerServiceImpl implements LawyerService {
 
     // ── Billing ───────────────────────────────────────────────────────────────
     @Override
-    public InvoiceDto.BillingSummary getBillingSummary(String username) {
-        double totalDue  = invoiceRepository.getTotalDueByLawyerUsername(username);
-        double totalPaid = invoiceRepository.getTotalPaidByLawyerUsername(username);
-        long unpaid   = invoiceRepository.countByLawyerUsernameAndStatus(username, Invoice.InvoiceStatus.UNPAID);
-        long overdue  = invoiceRepository.countByLawyerUsernameAndStatus(username, Invoice.InvoiceStatus.OVERDUE);
-        long paid     = invoiceRepository.countByLawyerUsernameAndStatus(username, Invoice.InvoiceStatus.PAID);
-        long partial  = invoiceRepository.countByLawyerUsernameAndStatus(username, Invoice.InvoiceStatus.PARTIALLY_PAID);
-        return new InvoiceDto.BillingSummary(totalDue, totalPaid, unpaid, overdue, paid, partial);
-    }
+public InvoiceDto.BillingSummary getBillingSummary(String username) {
+    double totalCaseFees    = caseRepository.getTotalFeesByLawyerUsername(username);
+    double totalInvoiced    = invoiceRepository.getTotalInvoicedByLawyerUsername(username);
+    double remainingBalance = Math.max(0.0, totalCaseFees - totalInvoiced);
+    double totalDue         = invoiceRepository.getTotalDueByLawyerUsername(username);
+    double totalPaid        = invoiceRepository.getTotalPaidByLawyerUsername(username);
+    long unpaid   = invoiceRepository.countByLawyerUsernameAndStatus(username, Invoice.InvoiceStatus.UNPAID);
+    long overdue  = invoiceRepository.countByLawyerUsernameAndStatus(username, Invoice.InvoiceStatus.OVERDUE);
+    long paid     = invoiceRepository.countByLawyerUsernameAndStatus(username, Invoice.InvoiceStatus.PAID);
+    long partial  = invoiceRepository.countByLawyerUsernameAndStatus(username, Invoice.InvoiceStatus.PARTIALLY_PAID);
+
+    return new InvoiceDto.BillingSummary(
+        totalCaseFees, totalInvoiced, remainingBalance,
+        totalDue, totalPaid, unpaid, overdue, paid, partial
+    );
+}
 
     @Override
     public List<InvoiceDto> getMyInvoices(String username) {

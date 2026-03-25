@@ -18,6 +18,7 @@
   <!-- ── Summary Cards ────────────────────────────────────────────────────── -->
   <div class="summary-grid" *ngIf="!isLoadingSummary && summary">
 
+    <!-- Existing 4 cards -->
     <div class="stat-card" style="--delay:.05s">
       <div class="stat-card-inner">
         <div class="stat-top">
@@ -77,6 +78,77 @@
         </div>
         <div class="stat-value">{{ summary.partialCount }}</div>
         <div class="stat-sub">partially paid</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- NEW: Case Fees Summary Row -->
+  <div class="fees-summary-row" *ngIf="!isLoadingSummary && summary">
+
+    <div class="stat-card stat-card--fees" style="--delay:.22s">
+      <div class="stat-card-inner">
+        <div class="stat-top">
+          <span class="stat-label">Agreed Case Fees</span>
+          <span class="stat-icon-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </span>
+        </div>
+        <div class="stat-value">₹{{ summary.totalCaseFees | number:'1.0-0' }}</div>
+        <div class="stat-sub">total fees across all cases</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--invoiced" style="--delay:.25s">
+      <div class="stat-card-inner">
+        <div class="stat-top">
+          <span class="stat-label">Total Invoiced</span>
+          <span class="stat-icon-wrap stat-icon-wrap--green">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+              <line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+          </span>
+        </div>
+        <div class="stat-value">₹{{ summary.totalInvoiced | number:'1.0-0' }}</div>
+        <div class="stat-sub">raised as invoices so far</div>
+      </div>
+    </div>
+
+    <!-- Remaining balance card — only shown when > 0 -->
+    <div class="stat-card stat-card--remaining" style="--delay:.28s"
+         *ngIf="summary.remainingBalance > 0">
+      <div class="stat-card-inner">
+        <div class="stat-top">
+          <span class="stat-label">Remaining to Invoice</span>
+          <span class="stat-icon-wrap stat-icon-wrap--gold">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 8 12 12 14 14"/>
+            </svg>
+          </span>
+        </div>
+        <div class="stat-value stat-value--gold">₹{{ summary.remainingBalance | number:'1.0-0' }}</div>
+        <div class="stat-sub">yet to be raised as invoices</div>
+      </div>
+    </div>
+
+    <!-- Progress bar spanning full row -->
+    <div class="fees-progress-block" *ngIf="summary.totalCaseFees > 0">
+      <div class="fees-progress-labels">
+        <span>Invoiced: ₹{{ summary.totalInvoiced | number:'1.0-0' }}</span>
+        <span>Total: ₹{{ summary.totalCaseFees | number:'1.0-0' }}</span>
+      </div>
+      <div class="fees-progress-track">
+        <div class="fees-progress-fill"
+             [style.width.%]="(summary.totalInvoiced / summary.totalCaseFees) * 100 | number:'1.0-0'">
+        </div>
+      </div>
+      <div class="fees-progress-sub">
+        {{ (summary.totalInvoiced / summary.totalCaseFees) * 100 | number:'1.0-0' }}% of agreed fees invoiced
       </div>
     </div>
 
@@ -192,9 +264,7 @@
 
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════════════════
-     INVOICE DETAIL PANEL
-     ════════════════════════════════════════════════════════════════════════════ -->
+<!-- ── INVOICE DETAIL PANEL ─────────────────────────────────────────────────── -->
 <div class="detail-backdrop" *ngIf="detailOpen" (click)="closeDetail()"></div>
 
 <div class="detail-panel" [class.open]="detailOpen">
@@ -255,7 +325,6 @@
         <p class="detail-notes">{{ selectedInvoice.description }}</p>
       </div>
 
-      <!-- Amount breakdown -->
       <div class="section-block">
         <span class="section-label">Amount Breakdown</span>
         <div class="totals-block">
@@ -291,9 +360,7 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════════════════
-     CREATE INVOICE MODAL
-     ════════════════════════════════════════════════════════════════════════════ -->
+<!-- ── CREATE INVOICE MODAL ──────────────────────────────────────────────────── -->
 <div class="modal-backdrop" *ngIf="createModalOpen" (click)="closeCreateModal()">
   <div class="modal-card" (click)="$event.stopPropagation()">
 
@@ -311,7 +378,6 @@
 
     <form [formGroup]="createForm" (ngSubmit)="submitInvoice()" class="modal-form" novalidate>
 
-      <!-- Case -->
       <div class="lf-field">
         <label class="lf-label">Case *</label>
         <div class="lf-input-wrap lf-select-wrap"
@@ -325,7 +391,6 @@
         <span class="lf-error" *ngIf="createForm.get('caseId')?.hasError('required') && createForm.get('caseId')?.touched">Required</span>
       </div>
 
-      <!-- Title -->
       <div class="lf-field">
         <label class="lf-label">Invoice Title *</label>
         <div class="lf-input-wrap"
@@ -336,7 +401,6 @@
         <span class="lf-error" *ngIf="createForm.get('title')?.hasError('required') && createForm.get('title')?.touched">Title required</span>
       </div>
 
-      <!-- Type + Amount -->
       <div class="field-row">
         <div class="lf-field">
           <label class="lf-label">Invoice Type *</label>
@@ -359,13 +423,11 @@
         </div>
       </div>
 
-      <!-- Tax + Due Date -->
       <div class="field-row">
         <div class="lf-field">
           <label class="lf-label">Tax Amount (₹) <span class="lf-hint">(optional)</span></label>
           <div class="lf-input-wrap">
-            <input class="lf-input" type="number" formControlName="taxAmount"
-                   placeholder="0" min="0"/>
+            <input class="lf-input" type="number" formControlName="taxAmount" placeholder="0" min="0"/>
           </div>
         </div>
 
@@ -377,7 +439,6 @@
         </div>
       </div>
 
-      <!-- Description -->
       <div class="lf-field">
         <label class="lf-label">Description <span class="lf-hint">(optional)</span></label>
         <div class="lf-input-wrap">
@@ -386,7 +447,6 @@
         </div>
       </div>
 
-      <!-- Notes -->
       <div class="lf-field">
         <label class="lf-label">Notes <span class="lf-hint">(optional)</span></label>
         <div class="lf-input-wrap">
@@ -395,7 +455,6 @@
         </div>
       </div>
 
-      <!-- Preview total -->
       <div class="invoice-preview-total">
         <span>Invoice Total</span>
         <span class="preview-amount">₹{{ previewTotal | number:'1.0-0' }}</span>
@@ -415,9 +474,7 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════════════════
-     UPDATE STATUS MODAL
-     ════════════════════════════════════════════════════════════════════════════ -->
+<!-- ── UPDATE STATUS MODAL ───────────────────────────────────────────────────── -->
 <div class="modal-backdrop" *ngIf="statusModalOpen" (click)="closeStatusModal()">
   <div class="modal-card modal-card--sm" (click)="$event.stopPropagation()">
 
@@ -444,7 +501,6 @@
         </div>
       </div>
 
-      <!-- Payment fields — show for PAID or PARTIALLY_PAID -->
       <ng-container *ngIf="showPaidFields">
         <div class="field-row">
           <div class="lf-field">

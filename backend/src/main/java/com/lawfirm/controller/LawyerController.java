@@ -23,7 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/lawyer")
 @CrossOrigin(origins = "*", maxAge = 3600)
-@PreAuthorize("hasRole('ROLE_LAWYER')")
+@PreAuthorize("hasRole('LAWYER')")
 public class LawyerController {
 
     @Autowired private LawyerService lawyerService;

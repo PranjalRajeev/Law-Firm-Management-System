@@ -19,6 +19,10 @@ public class CaseDto {
     private String lawyerName;
     private Long   lawyerId;     // ← NEW: for consistency
     private Double feesCharged;
+    private Double totalFees;         // feesCharged on the case
+private Double totalInvoiced;     // sum of invoices for this case
+private Double remainingBalance;  // totalFees - totalInvoiced
+
 
     public static CaseDto fromEntity(Case c) {
         CaseDto dto = new CaseDto();
@@ -74,4 +78,11 @@ public class CaseDto {
     public void setLawyerId(Long lawyerId) { this.lawyerId = lawyerId; } // ← NEW
     public Double getFeesCharged() { return feesCharged; }
     public void setFeesCharged(Double feesCharged) { this.feesCharged = feesCharged; }
+    // add getters/setters
+public Double getTotalFees() { return totalFees; }
+public void setTotalFees(Double v) { this.totalFees = v; }
+public Double getTotalInvoiced() { return totalInvoiced; }
+public void setTotalInvoiced(Double v) { this.totalInvoiced = v; }
+public Double getRemainingBalance() { return remainingBalance; }
+public void setRemainingBalance(Double v) { this.remainingBalance = v; }
 }

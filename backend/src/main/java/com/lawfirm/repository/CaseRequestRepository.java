@@ -42,17 +42,9 @@ public interface CaseRequestRepository extends JpaRepository<CaseRequest, Long> 
     @Query("""
         SELECT r FROM CaseRequest r
         JOIN FETCH r.client
-        WHERE r.status = 'PENDING'
-        ORDER BY
-          CASE r.urgency
-            WHEN 'CRITICAL' THEN 1
-            WHEN 'HIGH'     THEN 2
-            WHEN 'MEDIUM'   THEN 3
-            WHEN 'LOW'      THEN 4
-          END,
-          r.createdAt ASC
+        WHERE r.status = :status
     """)
-    List<CaseRequest> findAllPendingOrderedByUrgency();
+    List<CaseRequest> findAllPendingRequestsWithClient(@Param("status") CaseRequest.RequestStatus status);
 
     /** Requests handled by a lawyer (accepted or rejected) by username */
     @Query("""
@@ -80,17 +72,10 @@ public interface CaseRequestRepository extends JpaRepository<CaseRequest, Long> 
     @Query("""
         SELECT r FROM CaseRequest r
         JOIN FETCH r.client
-        WHERE r.status = 'PENDING'
+        WHERE r.status = :status
           AND r.caseType = :caseType
-        ORDER BY
-          CASE r.urgency
-            WHEN 'CRITICAL' THEN 1
-            WHEN 'HIGH'     THEN 2
-            WHEN 'MEDIUM'   THEN 3
-            WHEN 'LOW'      THEN 4
-          END,
-          r.createdAt ASC
     """)
-    List<CaseRequest> findPendingByCaseType(
+    List<CaseRequest> findPendingByCaseTypeWithClient(
+            @Param("status") CaseRequest.RequestStatus status,
             @Param("caseType") com.lawfirm.entity.Case.CaseType caseType);
 }

@@ -4,10 +4,9 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models/user.model';
+import { jwtDecode } from 'jwt-decode';  // npm install jwt-decode
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = `${environment.apiUrl}`;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
@@ -22,17 +21,26 @@ export class AuthService {
   private loadStoredUser(): void {
     const token = localStorage.getItem(this.tokenKey);
     if (token) {
-      this.currentUserSubject.next(null);
+      try {
+        // Decode JWT to restore user state on page refresh
+        const decoded: any = jwtDecode(token);
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+          this.currentUserSubject.next(JSON.parse(storedUser));
+        }
+      } catch (e) {
+        // Token is invalid/expired — clear it
+        localStorage.removeItem(this.tokenKey);
+        localStorage.removeItem('currentUser');
+      }
     }
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    console.log('LOGIN CALLED with:', credentials);
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap(response => {
-        console.log('LOGIN SUCCESS:', response);
         localStorage.setItem(this.tokenKey, response.token);
-        this.currentUserSubject.next({
+        const user: User = {
           id: response.id,
           username: response.username,
           email: response.email,
@@ -42,19 +50,18 @@ export class AuthService {
           status: 'ACTIVE',
           createdAt: '',
           updatedAt: ''
-        });
+        };
+        localStorage.setItem('currentUser', JSON.stringify(user)); // ← persist user
+        this.currentUserSubject.next(user);
       })
     );
   }
 
   register(userData: RegisterRequest): Observable<AuthResponse> {
-    console.log('REGISTER CALLED with:', userData);
-    console.log('Posting to URL:', `${this.apiUrl}/auth/register`);
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData).pipe(
       tap(response => {
-        console.log('REGISTER RESPONSE:', response);
         localStorage.setItem(this.tokenKey, response.token);
-        this.currentUserSubject.next({
+        const user: User = {
           id: response.id,
           username: response.username,
           email: response.email,
@@ -64,13 +71,16 @@ export class AuthService {
           status: 'ACTIVE',
           createdAt: '',
           updatedAt: ''
-        });
+        };
+        localStorage.setItem('currentUser', JSON.stringify(user)); // ← persist user
+        this.currentUserSubject.next(user);
       })
     );
   }
 
   logout(): void {
     localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem('currentUser'); // ← clear persisted user
     this.currentUserSubject.next(null);
   }
 
@@ -100,9 +110,9 @@ export class AuthService {
   }
 
   getCurrentUser(): User | null {
-  return this.currentUserSubject.value;
-   }
-   
+    return this.currentUserSubject.value;
+  }
+
   getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
     return new HttpHeaders({

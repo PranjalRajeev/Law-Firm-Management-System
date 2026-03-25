@@ -55,7 +55,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     long countByClientUsernameAndStatus(@Param("username") String username,
                                         @Param("status") Invoice.InvoiceStatus status);
 
-    @Query("SELECT COALESCE(MAX(i.id),0) FROM Invoice i")
+    @Query("SELECT COALESCE(MAX(i.id),0L) FROM Invoice i")
     Long findMaxId();
 
     // ── Lawyer-scoped (NEW) ───────────────────────────────────────────────────
@@ -91,4 +91,17 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     @Query("SELECT COUNT(i) FROM Invoice i WHERE i.lawyer.username = :username AND i.status = :status")
     long countByLawyerUsernameAndStatus(@Param("username") String username,
                                         @Param("status") Invoice.InvoiceStatus status);
+
+    // Sum of all invoice amounts for a lawyer (regardless of status)
+@Query("SELECT COALESCE(SUM(i.totalAmount),0) FROM Invoice i WHERE i.lawyer.username = :username AND i.status NOT IN ('CANCELLED','WAIVED')")
+Double getTotalInvoicedByLawyerUsername(@Param("username") String username);
+
+// Sum of all invoice amounts for a client (regardless of status)
+@Query("SELECT COALESCE(SUM(i.totalAmount),0) FROM Invoice i WHERE i.client.username = :username AND i.status NOT IN ('CANCELLED','WAIVED')")
+Double getTotalInvoicedByClientUsername(@Param("username") String username);
+
+@Query("SELECT COALESCE(SUM(i.totalAmount),0) FROM Invoice i WHERE i.caseEntity.id = :caseId AND i.status NOT IN ('CANCELLED','WAIVED')")
+Double getTotalInvoicedByCaseId(@Param("caseId") Long caseId);
+
+
 }

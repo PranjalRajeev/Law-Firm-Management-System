@@ -302,6 +302,110 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// APPEND TO client-billing.component.scss
+// New styles for: agreed fees summary card, remaining balance banner
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Agreed fees summary card ──────────────────────────────────────────────────
+.summary-card--fees {
+  // Inherits .summary-card base styles — just add a distinct accent if needed
+  border-left: 3px solid rgba(var(--primary-rgb, 201, 168, 76), .4);
+}
+
+// ── Remaining balance banner ──────────────────────────────────────────────────
+.remaining-banner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: .5rem 1.5rem;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  background: rgba(201, 168, 76, .06);
+  border: 1px solid rgba(201, 168, 76, .18);
+  border-left: 3px solid rgba(201, 168, 76, .7);
+}
+
+.remaining-banner-left {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+
+.remaining-banner-label {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text-primary, #212121);
+}
+
+.remaining-banner-sub {
+  font-size: .75rem;
+  color: var(--text-secondary, #6b6b6b);
+}
+
+.remaining-banner-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .15rem;
+  flex-shrink: 0;
+}
+
+.remaining-banner-amount {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--warning-color, #b87333);
+  line-height: 1;
+}
+
+.remaining-banner-tag {
+  font-size: .7rem;
+  color: var(--text-secondary, #6b6b6b);
+  text-align: right;
+}
+
+// Progress bar spanning full width of banner
+.remaining-progress-wrap {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.remaining-progress-bar {
+  flex: 1;
+  height: 5px;
+  background: rgba(0, 0, 0, .08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.remaining-progress-fill {
+  height: 100%;
+  background: rgba(201, 168, 76, .75);
+  border-radius: 3px;
+  transition: width .8s ease;
+}
+
+.remaining-progress-label {
+  font-size: .7rem;
+  color: var(--text-secondary, #6b6b6b);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .remaining-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .remaining-banner-right {
+    align-items: flex-start;
+  }
+}
+
 // ── Responsive ────────────────────────────────────────────────────────────────
 @media (max-width: 900px) {
   .content-columns { grid-template-columns: 1fr; }

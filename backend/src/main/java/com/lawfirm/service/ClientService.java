@@ -52,4 +52,12 @@ public interface ClientService {
 
     /** Change password with current password verification */
     void changePassword(String username, ChangePasswordRequest request);
+
+
+     // ── Document Requests ─────────────────────────────────────────────────────
+    List<DocumentRequestDto> getMyDocumentRequests(String username);
+    List<DocumentRequestDto> getDocumentRequestsForCase(String username, Long caseId);
+    DocumentRequestDto fulfillDocumentRequest(String username, Long caseId, Long requestId,
+                                              MultipartFile file, String title,
+                                              String description, String documentType);
 }

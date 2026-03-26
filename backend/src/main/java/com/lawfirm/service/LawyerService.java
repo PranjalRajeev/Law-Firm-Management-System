@@ -68,4 +68,10 @@ public interface LawyerService {
     UserDto getProfile(String username);
     UserDto updateProfile(String username, UpdateProfileRequest request);
     void changePassword(String username, ChangePasswordRequest request);
+
+    // ── Document Requests ─────────────────────────────────────────────────────
+    List<DocumentRequestDto> getMyDocumentRequests(String username);
+    List<DocumentRequestDto> getDocumentRequestsForCase(String username, Long caseId);
+    DocumentRequestDto createDocumentRequest(String username, CreateDocumentRequestDto dto);
+    void cancelDocumentRequest(String username, Long requestId);
 }

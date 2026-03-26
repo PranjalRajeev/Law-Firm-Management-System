@@ -316,4 +316,33 @@ public class LawyerController {
             default     -> "application/octet-stream";
         };
     }
+
+    // ── Document Requests ─────────────────────────────────────────────────────
+ 
+    /** GET /api/lawyer/document-requests — all requests across lawyer's cases */
+    @GetMapping("/document-requests")
+    public ResponseEntity<List<DocumentRequestDto>> getMyDocumentRequests(Principal p) {
+        return ResponseEntity.ok(lawyerService.getMyDocumentRequests(p.getName()));
+    }
+ 
+    /** GET /api/lawyer/cases/{caseId}/document-requests */
+    @GetMapping("/cases/{caseId}/document-requests")
+    public ResponseEntity<List<DocumentRequestDto>> getDocumentRequestsForCase(
+            Principal p, @PathVariable Long caseId) {
+        return ResponseEntity.ok(lawyerService.getDocumentRequestsForCase(p.getName(), caseId));
+    }
+ 
+    /** POST /api/lawyer/document-requests — lawyer creates a request */
+    @PostMapping("/document-requests")
+    public ResponseEntity<DocumentRequestDto> createDocumentRequest(
+            Principal p, @Valid @RequestBody CreateDocumentRequestDto dto) {
+        return ResponseEntity.status(201).body(lawyerService.createDocumentRequest(p.getName(), dto));
+    }
+ 
+    /** DELETE /api/lawyer/document-requests/{requestId} — cancel a pending request */
+    @DeleteMapping("/document-requests/{requestId}")
+    public ResponseEntity<Void> cancelDocumentRequest(Principal p, @PathVariable Long requestId) {
+        lawyerService.cancelDocumentRequest(p.getName(), requestId);
+        return ResponseEntity.ok().build();
+    }
 }

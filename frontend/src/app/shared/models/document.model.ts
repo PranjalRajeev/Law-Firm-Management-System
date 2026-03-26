@@ -50,3 +50,22 @@ export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
   REJECTED:       'Rejected',
   ARCHIVED:       'Archived',
 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// APPEND to: src/app/shared/models/document.model.ts
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface DocumentRequestDto {
+  id: number;
+  title: string;
+  description: string | null;
+  status: 'PENDING' | 'FULFILLED' | 'CANCELLED';
+  createdAt: string;
+  fulfilledAt: string | null;
+  caseId: number;
+  caseNumber: string;
+  caseTitle: string;
+  requestedByName: string | null;
+  fulfilledDocumentId: number | null;
+  fulfilledDocumentTitle: string | null;
+}

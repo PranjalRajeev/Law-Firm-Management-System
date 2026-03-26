@@ -32,6 +32,7 @@ public class LawyerServiceImpl implements LawyerService {
     @Autowired private InvoiceRepository     invoiceRepository;
     @Autowired private UserRepository        userRepository;
     @Autowired private PasswordEncoder       passwordEncoder;
+    @Autowired private DocumentRequestRepository documentRequestRepository;
 
     @Value("${app.upload.dir:uploads/documents}")
     private String uploadDir;
@@ -715,27 +716,46 @@ public InvoiceDto.BillingSummary getBillingSummary(String username) {
                 Comparator.nullsLast(Comparator.reverseOrder())));
         return summaries;
     }
-//     @Override
-// public List<Object[]> getMonthlyEarnings(String username, int year) {
 
-//     List<Object[]> result = invoiceRepository.getMonthlyEarnings(username, year);
-
-//     // Optional: Fill missing months with 0
-//     Map<Integer, Double> monthMap = new HashMap<>();
-
-//     for (Object[] row : result) {
-//         Integer month = (Integer) row[0];
-//         Double amount = (Double) row[1];
-//         monthMap.put(month, amount);
-//     }
-
-//     List<Object[]> finalResult = new ArrayList<>();
-
-//     for (int i = 1; i <= 12; i++) {
-//         Double amount = monthMap.getOrDefault(i, 0.0);
-//         finalResult.add(new Object[]{i, amount});
-//     }
-
-//     return finalResult;
-// }
+     // ── Document Requests ─────────────────────────────────────────────────────
+ 
+    @Override
+    public List<DocumentRequestDto> getMyDocumentRequests(String username) {
+        return documentRequestRepository.findAllByLawyerUsername(username)
+                .stream().map(DocumentRequestDto::fromEntity).collect(Collectors.toList());
+    }
+ 
+    @Override
+    public List<DocumentRequestDto> getDocumentRequestsForCase(String username, Long caseId) {
+        resolveCase(username, caseId);
+        return documentRequestRepository.findByCaseIdAndLawyerUsername(caseId, username)
+                .stream().map(DocumentRequestDto::fromEntity).collect(Collectors.toList());
+    }
+ 
+    @Override
+    @Transactional(readOnly = false)
+    public DocumentRequestDto createDocumentRequest(String username, CreateDocumentRequestDto dto) {
+        User lawyer = resolveUser(username);
+        Case c = resolveCase(username, dto.getCaseId());
+ 
+        DocumentRequest req = new DocumentRequest();
+        req.setTitle(dto.getTitle().trim());
+        req.setDescription(dto.getDescription());
+        req.setStatus(DocumentRequest.RequestStatus.PENDING);
+        req.setCaseEntity(c);
+        req.setRequestedBy(lawyer);
+        req.setCreatedAt(LocalDateTime.now());
+        return DocumentRequestDto.fromEntity(documentRequestRepository.save(req));
+    }
+ 
+    @Override
+    @Transactional(readOnly = false)
+    public void cancelDocumentRequest(String username, Long requestId) {
+        DocumentRequest req = documentRequestRepository.findByIdAndLawyerUsername(requestId, username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found"));
+        if (req.getStatus() != DocumentRequest.RequestStatus.PENDING)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only PENDING requests can be cancelled");
+        req.setStatus(DocumentRequest.RequestStatus.CANCELLED);
+        documentRequestRepository.save(req);
+    }
 }

@@ -30,6 +30,7 @@ public class ClientServiceImpl implements ClientService {
     @Autowired private DocumentRepository documentRepository;
     @Autowired private InvoiceRepository  invoiceRepository;
     @Autowired private PasswordEncoder    passwordEncoder;
+    @Autowired private DocumentRequestRepository documentRequestRepository;
 
     @Value("${app.upload.dir:uploads/documents}")
     private String uploadDir;
@@ -418,5 +419,99 @@ public class ClientServiceImpl implements ClientService {
     private User resolveUser(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
+
+    // ── Document Requests ─────────────────────────────────────────────────────
+ 
+    @Override
+    public List<DocumentRequestDto> getMyDocumentRequests(String username) {
+        return documentRequestRepository.findAllByClientUsername(username)
+                .stream().map(DocumentRequestDto::fromEntity).collect(Collectors.toList());
+    }
+ 
+    @Override
+    public List<DocumentRequestDto> getDocumentRequestsForCase(String username, Long caseId) {
+        caseRepository.findByIdAndClientUsername(caseId, username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        return documentRequestRepository.findByCaseIdAndClientUsername(caseId, username)
+                .stream().map(DocumentRequestDto::fromEntity).collect(Collectors.toList());
+    }
+ 
+    @Override
+    @Transactional(readOnly = false)
+    public DocumentRequestDto fulfillDocumentRequest(String username, Long caseId, Long requestId,
+                                                     MultipartFile file, String title,
+                                                     String description, String documentType) {
+        User user = resolveUser(username);
+        Case c = caseRepository.findByIdAndClientUsername(caseId, username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+ 
+        DocumentRequest req = documentRequestRepository.findByIdAndClientUsername(requestId, username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document request not found"));
+ 
+        if (req.getStatus() != DocumentRequest.RequestStatus.PENDING)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This request is already fulfilled or cancelled");
+ 
+        // Use existing uploadDocument logic ─ reuse the same file-save code inline
+        if (file == null || file.isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
+        if (file.getSize() > 10 * 1024 * 1024)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File size must not exceed 10 MB");
+ 
+        String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "file";
+        String extension    = originalName.contains(".")
+                ? originalName.substring(originalName.lastIndexOf(".")).toLowerCase() : "";
+ 
+        if (!java.util.List.of(".pdf",".doc",".docx",".jpg",".jpeg",".png",".xlsx",".xls",".txt").contains(extension))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported file type");
+ 
+        String storedName = java.util.UUID.randomUUID() + extension;
+        java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+        try {
+            java.nio.file.Files.createDirectories(uploadPath);
+            java.nio.file.Files.copy(file.getInputStream(),
+                    uploadPath.resolve(storedName),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } catch (java.io.IOException e) {
+            throw new ResponseStatusException(
+                    org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to store file: " + e.getMessage());
+        }
+ 
+        Document.DocumentType docType;
+        try {
+            docType = documentType != null
+                    ? Document.DocumentType.valueOf(documentType.toUpperCase())
+                    : Document.DocumentType.OTHER;
+        } catch (IllegalArgumentException e) {
+            docType = Document.DocumentType.OTHER;
+        }
+ 
+        // Use request title as default if not provided
+        String resolvedTitle = (title != null && !title.isBlank()) ? title : req.getTitle();
+ 
+        Document doc = new Document();
+        doc.setTitle(resolvedTitle);
+        doc.setDescription(description != null ? description
+                : "Fulfills document request: " + req.getTitle());
+        doc.setFileName(originalName);
+        doc.setFilePath(uploadPath.resolve(storedName).toString());
+        doc.setFileType(extension.replace(".", "").toUpperCase());
+        doc.setFileSize(file.getSize());
+        doc.setDocumentType(docType);
+        doc.setStatus(Document.DocumentStatus.UPLOADED);
+        doc.setCaseEntity(c);
+        doc.setUploadedByUser(user);
+        doc.setUploadedBy(user.getId());
+        doc.setUploadedAt(java.time.LocalDateTime.now());
+        Document savedDoc = documentRepository.save(doc);
+ 
+        // Mark request as fulfilled
+        req.setStatus(DocumentRequest.RequestStatus.FULFILLED);
+        req.setFulfilledAt(java.time.LocalDateTime.now());
+        req.setFulfilledDocument(savedDoc);
+        documentRequestRepository.save(req);
+ 
+        return DocumentRequestDto.fromEntity(req);
     }
 }

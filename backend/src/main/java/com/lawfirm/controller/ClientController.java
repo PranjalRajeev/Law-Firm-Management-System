@@ -215,4 +215,43 @@ public class ClientController {
             default     -> "application/octet-stream";
         };
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+// APPEND these methods inside ClientController class
+// (add the import: import com.lawfirm.dto.DocumentRequestDto;
+//  to the existing import block at the top of ClientController.java)
+// ═══════════════════════════════════════════════════════════════════════════
+
+    // ── Document Requests ─────────────────────────────────────────────────────
+
+    /** GET /api/client/document-requests — all requests across client's cases */
+    @GetMapping("/document-requests")
+    public ResponseEntity<List<DocumentRequestDto>> getMyDocumentRequests(Principal principal) {
+        return ResponseEntity.ok(clientService.getMyDocumentRequests(principal.getName()));
+    }
+
+    /** GET /api/client/cases/{caseId}/document-requests */
+    @GetMapping("/cases/{caseId}/document-requests")
+    public ResponseEntity<List<DocumentRequestDto>> getDocumentRequestsForCase(
+            Principal principal, @PathVariable Long caseId) {
+        return ResponseEntity.ok(clientService.getDocumentRequestsForCase(principal.getName(), caseId));
+    }
+
+    /**
+     * POST /api/client/cases/{caseId}/document-requests/{requestId}/fulfill
+     * Client uploads a file to fulfill a specific document request.
+     */
+    @PostMapping(value = "/cases/{caseId}/document-requests/{requestId}/fulfill",
+                 consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DocumentRequestDto> fulfillDocumentRequest(
+            Principal principal,
+            @PathVariable Long caseId,
+            @PathVariable Long requestId,
+            @RequestPart("file") MultipartFile file,
+            @RequestParam(value = "title",        required = false) String title,
+            @RequestParam(value = "description",  required = false) String description,
+            @RequestParam(value = "documentType", required = false, defaultValue = "OTHER") String documentType) {
+        return ResponseEntity.ok(clientService.fulfillDocumentRequest(
+                principal.getName(), caseId, requestId, file, title, description, documentType));
+    }
 }

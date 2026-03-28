@@ -310,6 +310,125 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
+// ── ADD these blocks to lawyer-profile.component.scss ────────────────────────
+// They power the strength bar + rules checklist in the Security tab.
+// Copy the colour tokens from your existing file if they differ.
+
+$valid-color: #2d7a4f;
+$sw1: #d9534f;   // very weak
+$sw2: #e07b34;   // weak
+$sw3: #d4a017;   // fair
+$sw4: #5a9e4b;   // strong
+$sw5: #2d7a4f;   // very strong
+
+$ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+// ── Strength bar ──────────────────────────────────────────────────────────────
+.pw-strength-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-top: .625rem;
+}
+
+.pw-strength-segments {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(#0D0C0A, .1);
+  transition: background .3s $ease;
+
+  &.active {
+    &.strength-1 { background: $sw1; }
+    &.strength-2 { background: $sw2; }
+    &.strength-3 { background: $sw3; }
+    &.strength-4 { background: $sw4; }
+    &.strength-5 { background: $sw5; }
+  }
+}
+
+.pw-strength-label {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color .3s $ease;
+
+  &.strength-1 { color: $sw1; }
+  &.strength-2 { color: $sw2; }
+  &.strength-3 { color: $sw3; }
+  &.strength-4 { color: $sw4; }
+  &.strength-5 { color: $sw5; }
+}
+
+// ── Rules checklist ───────────────────────────────────────────────────────────
+.pw-rules {
+  list-style: none;
+  padding: .75rem 1rem;
+  margin: .5rem 0 0;
+  background: rgba(#0D0C0A, .03);
+  border: 1px solid rgba(#C9A84C, .08);
+  border-radius: 3px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .4rem .5rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .72rem;
+    font-weight: 500;
+    letter-spacing: .02em;
+    transition: color .2s $ease;
+
+    &.rule-pass { color: $valid-color; }
+    &.rule-fail { color: #ABA49A; }
+  }
+}
+
+.rule-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .2s $ease;
+
+  .rule-pass & { background: rgba($valid-color, .12); color: $valid-color; }
+  .rule-fail & { background: rgba(#0D0C0A, .06);      color: #ABA49A; }
+}
+
+// ── Confirm field match / mismatch borders ────────────────────────────────────
+.input--match    { border-color: rgba($valid-color, .5) !important; }
+.input--mismatch { border-color: rgba(#b83232, .5) !important; }
+
+// ── Match hint text ───────────────────────────────────────────────────────────
+.match-hint {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .72rem;
+  margin-top: .35rem;
+
+  .match-ok  { font-size: 14px; color: $valid-color; }
+  .match-err { font-size: 14px; color: #b83232; }
+}
+
+// ── Mobile: single-column rules ───────────────────────────────────────────────
+@media (max-width: 540px) {
+  .pw-rules { grid-template-columns: 1fr; }
+}
+
 // ── Responsive ────────────────────────────────────────────────────────────────
 @media (max-width: 640px) {
   .profile-page   { padding: 16px; }

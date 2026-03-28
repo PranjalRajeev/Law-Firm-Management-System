@@ -59,7 +59,7 @@
         <p class="form-subtext">Join the LexFirma platform to manage cases, documents, and client relationships with precision.</p>
       </div>
 
-      <!-- Server error banner -->
+      <!-- Server error banner (non-403 errors only) -->
       <div class="error-banner" *ngIf="errorMessage">
         <span class="error-icon">!</span>
         <span>{{ errorMessage }}</span>
@@ -69,6 +69,8 @@
 
         <!-- ── Name row ── -->
         <div class="field-row">
+
+          <!-- First Name -->
           <div class="lf-field">
             <label class="lf-label" for="firstName">First Name</label>
             <div class="lf-input-wrap"
@@ -82,11 +84,19 @@
                 <svg *ngIf="registerForm.get('firstName')?.invalid" class="icon-err" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </span>
             </div>
-            <span class="lf-error" *ngIf="registerForm.get('firstName')?.hasError('required') && registerForm.get('firstName')?.touched">
+            <!-- required error -->
+            <span class="lf-error"
+                  *ngIf="registerForm.get('firstName')?.hasError('required') && registerForm.get('firstName')?.touched">
               First name is required
+            </span>
+            <!-- FIX: letters-only error — shown when a digit is typed -->
+            <span class="lf-error"
+                  *ngIf="registerForm.get('firstName')?.hasError('lettersOnly') && registerForm.get('firstName')?.touched">
+              First name must contain letters only — no numbers
             </span>
           </div>
 
+          <!-- Last Name -->
           <div class="lf-field">
             <label class="lf-label" for="lastName">Last Name</label>
             <div class="lf-input-wrap"
@@ -100,8 +110,15 @@
                 <svg *ngIf="registerForm.get('lastName')?.invalid" class="icon-err" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </span>
             </div>
-            <span class="lf-error" *ngIf="registerForm.get('lastName')?.hasError('required') && registerForm.get('lastName')?.touched">
+            <!-- required error -->
+            <span class="lf-error"
+                  *ngIf="registerForm.get('lastName')?.hasError('required') && registerForm.get('lastName')?.touched">
               Last name is required
+            </span>
+            <!-- FIX: letters-only error — shown when a digit is typed -->
+            <span class="lf-error"
+                  *ngIf="registerForm.get('lastName')?.hasError('lettersOnly') && registerForm.get('lastName')?.touched">
+              Last name must contain letters only — no numbers
             </span>
           </div>
         </div>
@@ -120,29 +137,54 @@
               <svg *ngIf="registerForm.get('username')?.invalid" class="icon-err" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </span>
           </div>
-          <span class="lf-error" *ngIf="registerForm.get('username')?.hasError('required') && registerForm.get('username')?.touched">Username is required</span>
-          <span class="lf-error" *ngIf="registerForm.get('username')?.hasError('minlength') && registerForm.get('username')?.touched">Minimum 3 characters required</span>
-          <span class="lf-error" *ngIf="registerForm.get('username')?.hasError('pattern') && registerForm.get('username')?.touched">Only letters, numbers, dots, hyphens, and underscores allowed</span>
+          <span class="lf-error"
+                *ngIf="registerForm.get('username')?.hasError('required') && registerForm.get('username')?.touched">
+            Username is required
+          </span>
+          <span class="lf-error"
+                *ngIf="registerForm.get('username')?.hasError('minlength') && registerForm.get('username')?.touched">
+            Minimum 3 characters required
+          </span>
+          <span class="lf-error"
+                *ngIf="registerForm.get('username')?.hasError('pattern') && registerForm.get('username')?.touched">
+            Only letters, numbers, dots, hyphens, and underscores allowed
+          </span>
         </div>
 
         <!-- ── Email ── -->
         <div class="lf-field">
           <label class="lf-label" for="email">Email Address</label>
           <div class="lf-input-wrap"
-               [class.has-error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
-               [class.is-valid]="registerForm.get('email')?.valid && registerForm.get('email')?.touched">
+               [class.has-error]="(registerForm.get('email')?.invalid && registerForm.get('email')?.touched) || emailAlreadyExists"
+               [class.is-valid]="registerForm.get('email')?.valid && registerForm.get('email')?.touched && !emailAlreadyExists">
             <input id="email" class="lf-input" type="email"
-                   formControlName="email" placeholder="elena@lexfirma.law"
-                   autocomplete="email" />
-            <span class="field-status-icon" *ngIf="registerForm.get('email')?.touched">
-              <svg *ngIf="registerForm.get('email')?.valid" class="icon-ok" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <svg *ngIf="registerForm.get('email')?.invalid" class="icon-err" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                   formControlName="email"
+                   placeholder="elena@lexfirma.law"
+                   autocomplete="email"
+                   (input)="onEmailInput()" />
+            <!-- FIX: show ✕ icon also when emailAlreadyExists is set -->
+            <span class="field-status-icon" *ngIf="registerForm.get('email')?.touched || emailAlreadyExists">
+              <svg *ngIf="registerForm.get('email')?.valid && !emailAlreadyExists"
+                   class="icon-ok" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <svg *ngIf="registerForm.get('email')?.invalid || emailAlreadyExists"
+                   class="icon-err" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
             </span>
           </div>
-          <!-- Single smart error message from the TS getter -->
+
+          <!-- Format / validation errors (from strictEmailValidator) -->
           <span class="lf-error"
                 *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched && emailErrorMessage">
             {{ emailErrorMessage }}
+          </span>
+
+          <!-- FIX: 403 inline error — replaces the snackBar / browser popup -->
+          <span class="lf-error" *ngIf="emailAlreadyExists">
+            An account with this email address already exists.
+            <button type="button" class="text-link error-link" (click)="navigateToLogin()">Sign in instead?</button>
           </span>
         </div>
 
@@ -168,7 +210,7 @@
             </button>
           </div>
 
-          <!-- ── Strength bar + label ── -->
+          <!-- Strength bar + label -->
           <div class="pw-strength-bar-wrap" *ngIf="showPasswordHints">
             <div class="pw-strength-segments">
               <span class="seg" [class.active]="passwordStrength >= 1" [class]="passwordStrength >= 1 ? passwordStrengthClass : ''"></span>
@@ -180,7 +222,7 @@
             <span class="pw-strength-label" [class]="passwordStrengthClass">{{ passwordStrengthLabel }}</span>
           </div>
 
-          <!-- ── Rule checklist ── -->
+          <!-- Rule checklist -->
           <ul class="pw-rules" *ngIf="showPasswordHints">
             <li [class.rule-pass]="passwordRules.minLength" [class.rule-fail]="!passwordRules.minLength">
               <span class="rule-icon">
@@ -219,7 +261,8 @@
             </li>
           </ul>
 
-          <span class="lf-error" *ngIf="registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched">
+          <span class="lf-error"
+                *ngIf="registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched">
             Password is required
           </span>
         </div>
@@ -241,7 +284,8 @@
               </svg>
             </span>
           </div>
-          <span class="lf-error" *ngIf="registerForm.get('role')?.hasError('required') && registerForm.get('role')?.touched">
+          <span class="lf-error"
+                *ngIf="registerForm.get('role')?.hasError('required') && registerForm.get('role')?.touched">
             Please select a role
           </span>
         </div>
@@ -250,7 +294,7 @@
         <button
           type="submit"
           class="btn-gold large full"
-          [disabled]="registerForm.invalid || isLoading"
+          [disabled]="registerForm.invalid || isLoading || emailAlreadyExists"
           [class.loading]="isLoading"
         >
           <span *ngIf="!isLoading" class="btn-label">

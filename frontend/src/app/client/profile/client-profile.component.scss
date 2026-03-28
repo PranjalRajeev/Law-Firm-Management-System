@@ -16,6 +16,14 @@ $border:      rgba(201, 168, 76, 0.13);
 $border-soft: rgba(201, 168, 76, 0.07);
 $ease:        cubic-bezier(0.4, 0, 0.2, 1);
 
+// Strength palette — same as register page
+$sw1: #d9534f;
+$sw2: #e07b34;
+$sw3: #d4a017;
+$sw4: #5a9e4b;
+$sw5: #2d7a4f;
+$valid-color: #2d7a4f;
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 .profile-page {
   padding: 28px 32px;
@@ -67,8 +75,7 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
 .hero-sep      { opacity: .4; }
 .hero-username { color: $muted-light; }
 .hero-since    { color: $muted; }
-.hero-status   { color: $muted; }
-.hero-status.status--active { color: $green; }
+.hero-status   { color: $muted; &.status--active { color: $green; } }
 
 .hero-email {
   display: flex; align-items: center; gap: 5px;
@@ -116,8 +123,8 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
   transition: color .2s $ease, border-color .2s $ease;
   mat-icon { font-size: 16px; width: 16px; height: 16px; }
 
-  &.active  { color: $gold; border-bottom-color: $gold; }
-  &:hover:not(.active) { color: $parchment; }
+  &.active              { color: $gold; border-bottom-color: $gold; }
+  &:hover:not(.active)  { color: $parchment; }
 }
 
 // ── Section body ──────────────────────────────────────────────────────────────
@@ -134,7 +141,6 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
 .info-card {
   background: $ink-soft; border: 1px solid $border-soft;
   border-radius: 5px; padding: 14px 16px;
-
   &--full { grid-column: 1 / -1; }
 }
 
@@ -146,8 +152,7 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ic-value {
-  font-size: 0.9rem; font-weight: 500; color: $parchment;
-  word-break: break-word;
+  font-size: 0.9rem; font-weight: 500; color: $parchment; word-break: break-word;
   &--muted { color: $muted-light; }
 }
 
@@ -163,9 +168,7 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .edit-form { display: flex; flex-direction: column; gap: 14px; }
-
 .form-row--half { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
 .form-field { display: flex; flex-direction: column; gap: 6px; }
 
 .form-label {
@@ -178,21 +181,16 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
   background: $ink-mid; border: 1px solid $border;
   border-radius: 3px; padding: 10px 13px;
   font-family: 'DM Sans', sans-serif; font-size: 0.84rem; color: $parchment;
-  outline: none; transition: border-color .2s $ease;
-  width: 100%;
+  outline: none; transition: border-color .2s $ease; width: 100%;
 
-  &:focus      { border-color: rgba($gold,.4); }
+  &:focus        { border-color: rgba($gold,.4); }
   &::placeholder { color: $muted; }
-
-  &.input--match   { border-color: rgba($green,.4); }
+  &.input--match    { border-color: rgba($green,.4); }
   &.input--mismatch { border-color: rgba($red,.4); }
 }
 
 .form-textarea { resize: vertical; min-height: 80px; }
-
-.form-actions {
-  display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px;
-}
+.form-actions  { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
 
 // ── Buttons ───────────────────────────────────────────────────────────────────
 .btn-primary {
@@ -203,7 +201,7 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
   transition: background .2s $ease;
   mat-icon { font-size: 16px; width: 16px; height: 16px; }
   ::ng-deep .mat-mdc-progress-spinner circle { stroke: $ink !important; }
-  &:disabled { opacity: .6; cursor: not-allowed; }
+  &:disabled             { opacity: .6; cursor: not-allowed; }
   &:hover:not(:disabled) { background: $gold-light; }
 }
 
@@ -212,10 +210,10 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
   padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 0.83rem;
   color: $muted; cursor: pointer; transition: color .2s $ease, border-color .2s $ease;
   &:hover:not(:disabled) { color: $parchment; border-color: rgba($parchment,.25); }
-  &:disabled { opacity: .5; cursor: not-allowed; }
+  &:disabled             { opacity: .5; cursor: not-allowed; }
 }
 
-// ── Security section ──────────────────────────────────────────────────────────
+// ── Security card ─────────────────────────────────────────────────────────────
 .security-card {
   background: $ink-soft; border: 1px solid $border;
   border-radius: 6px; padding: 22px 24px;
@@ -240,7 +238,6 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
 // Password input with toggle
 .pw-input-wrap {
   position: relative;
-
   .form-input { padding-right: 42px; }
 }
 
@@ -252,27 +249,92 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
   &:hover { color: $muted-light; }
 }
 
-// Strength meter
-.pw-strength { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-.strength-bar {
-  flex: 1; height: 4px; background: rgba($parchment,.08);
-  border-radius: 2px; overflow: hidden;
-}
-.strength-fill {
-  height: 100%; border-radius: 2px; transition: width .3s $ease, background .3s $ease;
-  &.strength-1 { background: $red; }
-  &.strength-2 { background: $gold; }
-  &.strength-3 { background: $green; }
-  &.strength-4 { background: $green; }
-}
-.strength-label {
-  font-size: 0.68rem; font-weight: 600; white-space: nowrap;
-  &--weak { color: $red; }
-  &--fair { color: $gold; }
-  &--good { color: $green; }
+// ── Strength bar (5 segments — same as register) ──────────────────────────────
+.pw-strength-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-top: .625rem;
 }
 
-// Match hint
+.pw-strength-segments {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba($parchment, .1);
+  transition: background .3s $ease;
+
+  &.active {
+    &.strength-1 { background: $sw1; }
+    &.strength-2 { background: $sw2; }
+    &.strength-3 { background: $sw3; }
+    &.strength-4 { background: $sw4; }
+    &.strength-5 { background: $sw5; }
+  }
+}
+
+.pw-strength-label {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color .3s $ease;
+
+  &.strength-1 { color: $sw1; }
+  &.strength-2 { color: $sw2; }
+  &.strength-3 { color: $sw3; }
+  &.strength-4 { color: $sw4; }
+  &.strength-5 { color: $sw5; }
+}
+
+// ── Rules checklist (same as register) ───────────────────────────────────────
+.pw-rules {
+  list-style: none;
+  padding: .75rem 1rem;
+  margin: .5rem 0 0;
+  background: rgba($ink, .03);
+  border: 1px solid $border-soft;
+  border-radius: 3px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .4rem .5rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .72rem;
+    font-weight: 500;
+    letter-spacing: .02em;
+    transition: color .2s $ease;
+
+    &.rule-pass { color: $valid-color; }
+    &.rule-fail { color: $muted-light; }
+  }
+}
+
+.rule-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .2s $ease;
+
+  .rule-pass & { background: rgba($valid-color, .12); color: $valid-color; }
+  .rule-fail & { background: rgba($ink, .06);          color: $muted-light; }
+}
+
+// ── Match hint ────────────────────────────────────────────────────────────────
 .match-hint {
   display: flex; align-items: center; gap: 4px;
   font-size: 0.72rem; margin-top: 5px;
@@ -280,7 +342,7 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
 .match-ok  { font-size: 14px !important; width: 14px !important; height: 14px !important; color: $green; }
 .match-err { font-size: 14px !important; width: 14px !important; height: 14px !important; color: $red; }
 
-// Account info card
+// ── Account info card ─────────────────────────────────────────────────────────
 .account-info-card {
   background: $ink-soft; border: 1px solid $border-soft;
   border-radius: 6px; padding: 18px 20px;
@@ -299,15 +361,13 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
 .aic-key { font-size: 0.78rem; color: $muted; }
 .aic-val { font-size: 0.82rem; font-weight: 500; color: $parchment; }
 
-// Status pill
+// ── Status pill ───────────────────────────────────────────────────────────────
 .status-pill {
   font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
   padding: 3px 9px; border-radius: 2px;
   background: rgba($muted,.1); color: $muted; border: 1px solid rgba($muted,.2);
 
-  &--active {
-    background: rgba($green,.1); color: $green; border-color: rgba($green,.2);
-  }
+  &--active { background: rgba($green,.1); color: $green; border-color: rgba($green,.2); }
 }
 
 // ── Responsive ────────────────────────────────────────────────────────────────
@@ -317,4 +377,5 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
   .btn-edit-hero  { align-self: stretch; justify-content: center; }
   .info-grid      { grid-template-columns: 1fr; }
   .form-row--half { grid-template-columns: 1fr; }
+  .pw-rules       { grid-template-columns: 1fr; }
 }

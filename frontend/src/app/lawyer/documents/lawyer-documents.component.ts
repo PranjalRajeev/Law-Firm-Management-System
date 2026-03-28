@@ -1,5 +1,4 @@
 // src/app/lawyer/documents/lawyer-documents.component.ts
-// REPLACE the entire file with this content
 
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -9,17 +8,25 @@ import {
   DocumentDto, DocumentRequestDto, DocumentType, DocumentStatus,
   DOCUMENT_TYPE_LABELS, DOCUMENT_STATUS_LABELS
 } from '../../shared/models/document.model';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
+// Minimal shape we need from CaseDto
+interface CaseRef {
+  id:         number;
+  caseNumber: string;
+  title:      string;
+}
 
 interface CaseDocGroup {
-  caseId:        number;
-  caseNumber:    string;
-  caseTitle:     string;
-  documents:     DocumentDto[];
-  requests:      DocumentRequestDto[];
-  docCount:      number;
-  pendingReview: number;   // client docs with status UPLOADED
-  pendingRequests: number; // open document requests
+  caseId:          number;
+  caseNumber:      string;
+  caseTitle:       string;
+  documents:       DocumentDto[];
+  requests:        DocumentRequestDto[];
+  docCount:        number;
+  pendingReview:   number;   // docs with status UPLOADED (awaiting lawyer review)
+  pendingRequests: number;   // open document requests
 }
 
 @Component({
@@ -85,9 +92,9 @@ export class LawyerDocumentsComponent implements OnInit {
   // ── Reference data ────────────────────────────────────────────────────────
   readonly typeLabels:   Record<string, string> = DOCUMENT_TYPE_LABELS;
   readonly statusLabels: Record<string, string> = DOCUMENT_STATUS_LABELS;
-  readonly allTypes     = Object.keys(DOCUMENT_TYPE_LABELS)  as DocumentType[];
+  readonly allTypes     = Object.keys(DOCUMENT_TYPE_LABELS)   as DocumentType[];
   readonly allStatuses  = Object.keys(DOCUMENT_STATUS_LABELS) as DocumentStatus[];
-  readonly reviewableStatuses = ['PENDING_REVIEW', 'APPROVED', 'REJECTED', 'ARCHIVED'];
+  readonly reviewableStatuses: DocumentStatus[] = ['APPROVED', 'REJECTED', 'ARCHIVED'];
 
   private base = `${environment.apiUrl}/lawyer`;
 
@@ -96,30 +103,79 @@ export class LawyerDocumentsComponent implements OnInit {
   ngOnInit(): void { this.loadCaseGroups(); }
 
   // ── Load ──────────────────────────────────────────────────────────────────
+
+  /**
+   * THE FIX:
+   * Fetch cases, documents, and document-requests all in parallel.
+   * Cases are used as the BASE — so every case always shows as a card
+   * even if it has zero documents and zero requests.
+   * Documents and requests are then overlaid by caseId.
+   */
   loadCaseGroups(): void {
     this.loadingCases = true;
+    this.casesError   = '';
+
     forkJoin({
-      docs:     this.http.get<DocumentDto[]>(`${this.base}/documents`),
-      requests: this.http.get<DocumentRequestDto[]>(`${this.base}/document-requests`)
+      cases:    this.http.get<CaseRef[]>(`${this.base}/cases`).pipe(
+                  catchError(() => of([] as CaseRef[]))
+                ),
+      docs:     this.http.get<DocumentDto[]>(`${this.base}/documents`).pipe(
+                  catchError(() => of([] as DocumentDto[]))
+                ),
+      requests: this.http.get<DocumentRequestDto[]>(`${this.base}/document-requests`).pipe(
+                  catchError(() => of([] as DocumentRequestDto[]))
+                )
     }).subscribe({
-      next: ({ docs, requests }) => {
-        this.caseGroups   = this.groupByCase(docs, requests);
+      next: ({ cases, docs, requests }) => {
+        this.caseGroups   = this.buildGroups(cases, docs, requests);
         this.loadingCases = false;
       },
-      error: () => { this.casesError = 'Failed to load documents.'; this.loadingCases = false; }
+      error: () => {
+        this.casesError   = 'Failed to load documents.';
+        this.loadingCases = false;
+      }
     });
   }
 
-  private groupByCase(docs: DocumentDto[], requests: DocumentRequestDto[]): CaseDocGroup[] {
-    const map = new Map<number, CaseDocGroup>();
+  /**
+   * Build one CaseDocGroup per case.
+   * Cases drive the list — documents and requests are matched by caseId.
+   */
+  private buildGroups(
+    cases:    CaseRef[],
+    docs:     DocumentDto[],
+    requests: DocumentRequestDto[]
+  ): CaseDocGroup[] {
 
+    // Start with a group for every case (even empty ones)
+    const map = new Map<number, CaseDocGroup>();
+    for (const c of cases) {
+      map.set(c.id, {
+        caseId:          c.id,
+        caseNumber:      c.caseNumber,
+        caseTitle:       c.title,
+        documents:       [],
+        requests:        [],
+        docCount:        0,
+        pendingReview:   0,
+        pendingRequests: 0
+      });
+    }
+
+    // Overlay documents
     for (const d of docs) {
       const cid = d.caseId ?? 0;
       if (!map.has(cid)) {
+        // Document belongs to a case not in our list — add it anyway
         map.set(cid, {
-          caseId: cid, caseNumber: d.caseNumber ?? '—',
-          caseTitle: d.caseTitle ?? 'Unknown Case',
-          documents: [], requests: [], docCount: 0, pendingReview: 0, pendingRequests: 0
+          caseId:          cid,
+          caseNumber:      d.caseNumber ?? '—',
+          caseTitle:       d.caseTitle  ?? 'Unknown Case',
+          documents:       [],
+          requests:        [],
+          docCount:        0,
+          pendingReview:   0,
+          pendingRequests: 0
         });
       }
       const g = map.get(cid)!;
@@ -128,13 +184,19 @@ export class LawyerDocumentsComponent implements OnInit {
       if (d.status === 'UPLOADED') g.pendingReview++;
     }
 
+    // Overlay requests
     for (const r of requests) {
       const cid = r.caseId ?? 0;
       if (!map.has(cid)) {
         map.set(cid, {
-          caseId: cid, caseNumber: r.caseNumber ?? '—',
-          caseTitle: r.caseTitle ?? 'Unknown Case',
-          documents: [], requests: [], docCount: 0, pendingReview: 0, pendingRequests: 0
+          caseId:          cid,
+          caseNumber:      r.caseNumber ?? '—',
+          caseTitle:       r.caseTitle  ?? 'Unknown Case',
+          documents:       [],
+          requests:        [],
+          docCount:        0,
+          pendingReview:   0,
+          pendingRequests: 0
         });
       }
       const g = map.get(cid)!;
@@ -142,37 +204,46 @@ export class LawyerDocumentsComponent implements OnInit {
       if (r.status === 'PENDING') g.pendingRequests++;
     }
 
-    return Array.from(map.values())
-      .sort((a, b) => (b.pendingReview + b.pendingRequests) - (a.pendingReview + a.pendingRequests)
-                   || a.caseNumber.localeCompare(b.caseNumber));
+    // Sort: cases needing attention first, then by case number
+    return Array.from(map.values()).sort(
+      (a, b) =>
+        (b.pendingReview + b.pendingRequests) - (a.pendingReview + a.pendingRequests) ||
+        a.caseNumber.localeCompare(b.caseNumber)
+    );
   }
 
   // ── Navigation ────────────────────────────────────────────────────────────
   openCase(group: CaseDocGroup): void {
-    this.activeCaseGroup = group;
-    this.view            = 'documents';
-    this.documents       = [...group.documents];
-    this.filtered        = [...group.documents];
-    this.requests        = [...group.requests];
-    this.selectedDoc     = null;
-    this.editStatusMode  = false;
-    this.activeTab       = 'documents';
-    this.searchKeyword   = '';
-    this.selectedType    = '';
-    this.selectedStatus  = '';
+    this.activeCaseGroup  = group;
+    this.view             = 'documents';
+    this.documents        = [...group.documents];
+    this.filtered         = [...group.documents];
+    this.requests         = [...group.requests];
+    this.selectedDoc      = null;
+    this.editStatusMode   = false;
+    this.activeTab        = 'documents';
+    this.searchKeyword    = '';
+    this.selectedType     = '';
+    this.selectedStatus   = '';
+    this.showUploadPanel  = false;
+    this.showRequestPanel = false;
+    this.uploadError      = '';
+    this.uploadSuccess    = '';
+    this.requestError     = '';
+    this.requestSuccess   = '';
   }
 
   backToCases(): void {
-    this.view            = 'cases';
-    this.activeCaseGroup = null;
-    this.selectedDoc     = null;
-    this.showUploadPanel = false;
+    this.view             = 'cases';
+    this.activeCaseGroup  = null;
+    this.selectedDoc      = null;
+    this.showUploadPanel  = false;
     this.showRequestPanel = false;
   }
 
   setTab(tab: 'documents' | 'requests'): void {
-    this.activeTab   = tab;
-    this.selectedDoc = null;
+    this.activeTab      = tab;
+    this.selectedDoc    = null;
     this.editStatusMode = false;
   }
 
@@ -186,14 +257,18 @@ export class LawyerDocumentsComponent implements OnInit {
   onStatusFilter(): void { this.applyFilters(); }
 
   clearFilters(): void {
-    this.searchKeyword = ''; this.selectedType = ''; this.selectedStatus = '';
+    this.searchKeyword  = '';
+    this.selectedType   = '';
+    this.selectedStatus = '';
     this.applyFilters();
   }
 
   private applyFilters(): void {
+    const kw = this.searchKeyword.toLowerCase();
     this.filtered = this.documents.filter(d => {
-      const kw = this.searchKeyword.toLowerCase();
-      const searchOk = !kw || d.title.toLowerCase().includes(kw) || d.fileName.toLowerCase().includes(kw);
+      const searchOk = !kw
+        || (d.title    ?? '').toLowerCase().includes(kw)
+        || (d.fileName ?? '').toLowerCase().includes(kw);
       const typeOk   = !this.selectedType   || d.documentType === this.selectedType;
       const statusOk = !this.selectedStatus || d.status       === this.selectedStatus;
       return searchOk && typeOk && statusOk;
@@ -234,7 +309,7 @@ export class LawyerDocumentsComponent implements OnInit {
           this.editStatusMode = false;
           this.savingStatus   = false;
           this.rejectionNote  = '';
-          this.snackBar.open(`Status updated to ${this.newDocStatus.toLowerCase()}.`, 'Close', { duration: 3000 });
+          this.snackBar.open(`Status updated to ${this.statusLabel(this.newDocStatus)}.`, 'Close', { duration: 3000 });
         },
         error: err => {
           this.savingStatus = false;
@@ -258,8 +333,12 @@ export class LawyerDocumentsComponent implements OnInit {
   }
 
   submitUpload(): void {
-    if (!this.selectedFile || !this.activeCaseGroup) { this.uploadError = 'Please select a file.'; return; }
-    this.uploading = true; this.uploadError = ''; this.uploadSuccess = '';
+    if (!this.selectedFile)    { this.uploadError = 'Please select a file.'; return; }
+    if (!this.activeCaseGroup) { return; }
+    this.uploading     = true;
+    this.uploadError   = '';
+    this.uploadSuccess = '';
+
     const fd = new FormData();
     fd.append('file', this.selectedFile);
     if (this.uploadTitle) fd.append('title', this.uploadTitle);
@@ -277,16 +356,23 @@ export class LawyerDocumentsComponent implements OnInit {
           this.activeCaseGroup.docCount++;
         }
         this.uploadSuccess = `"${doc.title}" uploaded successfully.`;
-        this.uploading = false;
+        this.uploading     = false;
         setTimeout(() => { this.showUploadPanel = false; this.resetUploadForm(); }, 2000);
       },
-      error: err => { this.uploadError = err?.error?.message ?? 'Upload failed.'; this.uploading = false; }
+      error: err => {
+        this.uploadError = err?.error?.message ?? 'Upload failed.';
+        this.uploading   = false;
+      }
     });
   }
 
   private resetUploadForm(): void {
-    this.uploadTitle = ''; this.uploadDesc = ''; this.uploadType = 'OTHER';
-    this.selectedFile = null; this.uploadError = ''; this.uploadSuccess = '';
+    this.uploadTitle   = '';
+    this.uploadDesc    = '';
+    this.uploadType    = 'OTHER';
+    this.selectedFile  = null;
+    this.uploadError   = '';
+    this.uploadSuccess = '';
   }
 
   // ── Document requests ─────────────────────────────────────────────────────
@@ -297,10 +383,12 @@ export class LawyerDocumentsComponent implements OnInit {
   }
 
   submitRequest(): void {
-    if (!this.requestTitle.trim() || !this.activeCaseGroup) {
-      this.requestError = 'Please enter a title.'; return;
-    }
-    this.creatingRequest = true; this.requestError = ''; this.requestSuccess = '';
+    if (!this.requestTitle.trim()) { this.requestError = 'Please enter a title.'; return; }
+    if (!this.activeCaseGroup)     { return; }
+    this.creatingRequest = true;
+    this.requestError    = '';
+    this.requestSuccess  = '';
+
     this.http.post<DocumentRequestDto>(`${this.base}/document-requests`, {
       caseId:      this.activeCaseGroup.caseId,
       title:       this.requestTitle.trim(),
@@ -312,11 +400,18 @@ export class LawyerDocumentsComponent implements OnInit {
           this.activeCaseGroup.requests.unshift(req);
           this.activeCaseGroup.pendingRequests++;
         }
-        this.requestSuccess = `Request "${req.title}" sent to client.`;
+        this.requestSuccess  = `Request "${req.title}" sent to client.`;
         this.creatingRequest = false;
-        setTimeout(() => { this.showRequestPanel = false; this.resetRequestForm(); this.activeTab = 'requests'; }, 1800);
+        setTimeout(() => {
+          this.showRequestPanel = false;
+          this.resetRequestForm();
+          this.activeTab = 'requests';
+        }, 1800);
       },
-      error: err => { this.requestError = err?.error?.message ?? 'Failed to send request.'; this.creatingRequest = false; }
+      error: err => {
+        this.requestError    = err?.error?.message ?? 'Failed to send request.';
+        this.creatingRequest = false;
+      }
     });
   }
 
@@ -325,25 +420,28 @@ export class LawyerDocumentsComponent implements OnInit {
     this.http.delete(`${this.base}/document-requests/${req.id}`).subscribe({
       next: () => {
         const i = this.requests.findIndex(r => r.id === req.id);
-        if (i > -1) { this.requests[i] = { ...req, status: 'CANCELLED' }; }
+        if (i > -1) this.requests[i] = { ...req, status: 'CANCELLED' };
         if (this.activeCaseGroup) {
           const j = this.activeCaseGroup.requests.findIndex(r => r.id === req.id);
-          if (j > -1) { this.activeCaseGroup.requests[j] = { ...req, status: 'CANCELLED' }; }
+          if (j > -1) this.activeCaseGroup.requests[j] = { ...req, status: 'CANCELLED' };
           this.activeCaseGroup.pendingRequests =
             this.activeCaseGroup.requests.filter(r => r.status === 'PENDING').length;
         }
         this.snackBar.open('Request cancelled.', 'Close', { duration: 3000 });
       },
-      error: err => this.snackBar.open(err?.error?.message ?? 'Failed to cancel.', 'Close', { duration: 3000 })
+      error: err =>
+        this.snackBar.open(err?.error?.message ?? 'Failed to cancel.', 'Close', { duration: 3000 })
     });
   }
 
   private resetRequestForm(): void {
-    this.requestTitle = ''; this.requestDesc = '';
-    this.requestError = ''; this.requestSuccess = '';
+    this.requestTitle   = '';
+    this.requestDesc    = '';
+    this.requestError   = '';
+    this.requestSuccess = '';
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────────
+  // ── Delete document ───────────────────────────────────────────────────────
   deleteDocument(doc: DocumentDto): void {
     if (!confirm(`Delete "${doc.title}"?`)) return;
     this.http.delete(`${this.base}/documents/${doc.id}`).subscribe({
@@ -359,17 +457,30 @@ export class LawyerDocumentsComponent implements OnInit {
         if (this.selectedDoc?.id === doc.id) this.selectedDoc = null;
         this.snackBar.open('Document deleted.', 'Close', { duration: 3000 });
       },
-      error: err => this.snackBar.open(err?.error?.message ?? 'Cannot delete.', 'Close', { duration: 3000 })
+      error: err =>
+        this.snackBar.open(err?.error?.message ?? 'Cannot delete.', 'Close', { duration: 3000 })
     });
   }
 
   // ── Download ──────────────────────────────────────────────────────────────
   download(doc: DocumentDto): void {
     this.downloading = doc.id;
-    const a = document.createElement('a');
-    a.href = `${this.base}/documents/${doc.id}/download`;
-    a.download = doc.fileName; a.click();
-    setTimeout(() => this.downloading = null, 2500);
+    this.http.get(`${this.base}/documents/${doc.id}/download`, { responseType: 'blob' })
+      .subscribe({
+        next: blob => {
+          const url = URL.createObjectURL(blob);
+          const a   = document.createElement('a');
+          a.href     = url;
+          a.download  = doc.fileName ?? 'document';
+          a.click();
+          URL.revokeObjectURL(url);
+          this.downloading = null;
+        },
+        error: () => {
+          this.downloading = null;
+          this.snackBar.open('Download failed.', 'Close', { duration: 3000 });
+        }
+      });
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -378,34 +489,39 @@ export class LawyerDocumentsComponent implements OnInit {
 
   statusClass(s: string | null): string {
     const map: Record<string, string> = {
-      UPLOADED: 'badge--uploaded', PENDING_REVIEW: 'badge--pending',
-      APPROVED: 'badge--approved', REJECTED: 'badge--rejected', ARCHIVED: 'badge--archived'
+      UPLOADED:       'badge--uploaded',
+      PENDING_REVIEW: 'badge--pending',
+      APPROVED:       'badge--approved',
+      REJECTED:       'badge--rejected',
+      ARCHIVED:       'badge--archived'
     };
     return map[s ?? ''] ?? 'badge--uploaded';
   }
 
   requestStatusClass(s: string): string {
     const map: Record<string, string> = {
-      PENDING: 'req-badge--pending', FULFILLED: 'req-badge--fulfilled', CANCELLED: 'req-badge--cancelled'
+      PENDING:   'req-badge--pending',
+      FULFILLED: 'req-badge--fulfilled',
+      CANCELLED: 'req-badge--cancelled'
     };
     return map[s] ?? 'req-badge--pending';
   }
 
   fileIconClass(ft: string | null): string {
     switch (ft?.toUpperCase()) {
-      case 'PDF': return 'icon--pdf';
+      case 'PDF':               return 'icon--pdf';
       case 'DOC': case 'DOCX': return 'icon--doc';
       case 'XLS': case 'XLSX': return 'icon--xls';
       case 'JPG': case 'JPEG': case 'PNG': return 'icon--img';
-      default: return 'icon--file';
+      default:                  return 'icon--file';
     }
   }
 
   formatSize(bytes: number | null): string {
     if (!bytes) return '—';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1048576) return `${(bytes/1024).toFixed(1)} KB`;
-    return `${(bytes/1048576).toFixed(1)} MB`;
+    if (bytes < 1024)    return `${bytes} B`;
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1048576).toFixed(1)} MB`;
   }
 
   canDelete(doc: DocumentDto): boolean {
@@ -420,10 +536,6 @@ export class LawyerDocumentsComponent implements OnInit {
     return this.caseGroups.reduce((sum, g) => sum + g.docCount, 0);
   }
 
-  docsByStatus(g: CaseDocGroup, status: string): number {
-    return g.documents.filter(d => d.status === status).length;
-  }
-
   get totalPendingReview(): number {
     return this.caseGroups.reduce((sum, g) => sum + g.pendingReview, 0);
   }
@@ -432,7 +544,7 @@ export class LawyerDocumentsComponent implements OnInit {
     return this.caseGroups.reduce((sum, g) => sum + g.pendingRequests, 0);
   }
 
-  pendingRequests(g: CaseDocGroup): number {
-    return g.requests.filter(r => r.status === 'PENDING').length;
+  docsByStatus(g: CaseDocGroup, status: string): number {
+    return g.documents.filter(d => d.status === status).length;
   }
 }

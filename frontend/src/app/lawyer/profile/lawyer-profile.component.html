@@ -180,57 +180,141 @@
           <div class="sc-title">
             <mat-icon>lock</mat-icon> Change Password
           </div>
-          <p class="sc-desc">Use a strong password with at least 6 characters, mixing letters, numbers and symbols.</p>
+          <p class="sc-desc">
+            Use a strong password with at least 8 characters, mixing uppercase,
+            lowercase, numbers and special characters.
+          </p>
         </div>
 
         <div class="pw-error" *ngIf="pwError">
           <mat-icon>error_outline</mat-icon> {{ pwError }}
         </div>
 
-        <!-- Current password -->
+        <!-- ── Current password ── -->
         <div class="form-field">
           <label class="form-label">Current Password <span class="req">*</span></label>
           <div class="pw-input-wrap">
             <input class="form-input" [type]="showCurrent ? 'text' : 'password'"
-                   [(ngModel)]="pwForm.currentPassword" placeholder="Enter current password" />
-            <button class="pw-toggle" (click)="showCurrent = !showCurrent">
+                   [(ngModel)]="pwForm.currentPassword"
+                   placeholder="Enter current password" />
+            <button class="pw-toggle" type="button" (click)="showCurrent = !showCurrent">
               <mat-icon>{{ showCurrent ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
           </div>
         </div>
 
-        <!-- New password -->
+        <!-- ── New password ── -->
         <div class="form-field">
           <label class="form-label">New Password <span class="req">*</span></label>
           <div class="pw-input-wrap">
             <input class="form-input" [type]="showNew ? 'text' : 'password'"
-                   [(ngModel)]="pwForm.newPassword" placeholder="At least 6 characters" />
-            <button class="pw-toggle" (click)="showNew = !showNew">
+                   [(ngModel)]="pwForm.newPassword"
+                   placeholder="Min. 8 characters" />
+            <button class="pw-toggle" type="button" (click)="showNew = !showNew">
               <mat-icon>{{ showNew ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
           </div>
 
-          <!-- Strength meter -->
-          <div class="pw-strength" *ngIf="pwForm.newPassword">
-            <div class="strength-bar">
-              <div class="strength-fill"
-                   [class.strength-1]="passwordStrength.level === 1"
-                   [class.strength-2]="passwordStrength.level === 2"
-                   [class.strength-3]="passwordStrength.level === 3"
-                   [class.strength-4]="passwordStrength.level === 4"
-                   [style.width.%]="passwordStrength.level * 25">
-              </div>
+          <!-- ── Strength bar (same as register) ── -->
+          <div class="pw-strength-bar-wrap" *ngIf="showPasswordHints">
+            <div class="pw-strength-segments">
+              <span class="seg"
+                    [class.active]="passwordStrengthScore >= 1"
+                    [class]="passwordStrengthScore >= 1 ? passwordStrengthClass : ''"></span>
+              <span class="seg"
+                    [class.active]="passwordStrengthScore >= 2"
+                    [class]="passwordStrengthScore >= 2 ? passwordStrengthClass : ''"></span>
+              <span class="seg"
+                    [class.active]="passwordStrengthScore >= 3"
+                    [class]="passwordStrengthScore >= 3 ? passwordStrengthClass : ''"></span>
+              <span class="seg"
+                    [class.active]="passwordStrengthScore >= 4"
+                    [class]="passwordStrengthScore >= 4 ? passwordStrengthClass : ''"></span>
+              <span class="seg"
+                    [class.active]="passwordStrengthScore >= 5"
+                    [class]="passwordStrengthScore >= 5 ? passwordStrengthClass : ''"></span>
             </div>
-            <span class="strength-label"
-                  [class.strength-label--weak]="passwordStrength.level <= 1"
-                  [class.strength-label--fair]="passwordStrength.level === 2"
-                  [class.strength-label--good]="passwordStrength.level >= 3">
-              {{ passwordStrength.label }}
+            <span class="pw-strength-label" [class]="passwordStrengthClass">
+              {{ passwordStrengthLabel }}
             </span>
           </div>
+
+          <!-- ── Rule checklist (same as register) ── -->
+          <ul class="pw-rules" *ngIf="showPasswordHints">
+            <li [class.rule-pass]="passwordRules.minLength"
+                [class.rule-fail]="!passwordRules.minLength">
+              <span class="rule-icon">
+                <svg *ngIf="passwordRules.minLength" width="10" height="10" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <svg *ngIf="!passwordRules.minLength" width="10" height="10" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="3">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                </svg>
+              </span>
+              At least 8 characters
+            </li>
+            <li [class.rule-pass]="passwordRules.hasUpper"
+                [class.rule-fail]="!passwordRules.hasUpper">
+              <span class="rule-icon">
+                <svg *ngIf="passwordRules.hasUpper" width="10" height="10" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <svg *ngIf="!passwordRules.hasUpper" width="10" height="10" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="3">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                </svg>
+              </span>
+              One uppercase letter (A–Z)
+            </li>
+            <li [class.rule-pass]="passwordRules.hasLower"
+                [class.rule-fail]="!passwordRules.hasLower">
+              <span class="rule-icon">
+                <svg *ngIf="passwordRules.hasLower" width="10" height="10" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <svg *ngIf="!passwordRules.hasLower" width="10" height="10" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="3">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                </svg>
+              </span>
+              One lowercase letter (a–z)
+            </li>
+            <li [class.rule-pass]="passwordRules.hasNumeric"
+                [class.rule-fail]="!passwordRules.hasNumeric">
+              <span class="rule-icon">
+                <svg *ngIf="passwordRules.hasNumeric" width="10" height="10" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <svg *ngIf="!passwordRules.hasNumeric" width="10" height="10" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="3">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                </svg>
+              </span>
+              One number (0–9)
+            </li>
+            <li [class.rule-pass]="passwordRules.hasSpecial"
+                [class.rule-fail]="!passwordRules.hasSpecial">
+              <span class="rule-icon">
+                <svg *ngIf="passwordRules.hasSpecial" width="10" height="10" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <svg *ngIf="!passwordRules.hasSpecial" width="10" height="10" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="3">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                </svg>
+              </span>
+              One special character (!&#64;#$%…)
+            </li>
+          </ul>
         </div>
 
-        <!-- Confirm password -->
+        <!-- ── Confirm password ── -->
         <div class="form-field">
           <label class="form-label">Confirm New Password <span class="req">*</span></label>
           <div class="pw-input-wrap">
@@ -240,13 +324,18 @@
                    placeholder="Re-enter new password"
                    [class.input--match]="pwForm.confirmPassword && pwForm.newPassword === pwForm.confirmPassword"
                    [class.input--mismatch]="pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword" />
-            <button class="pw-toggle" (click)="showConfirm = !showConfirm">
+            <button class="pw-toggle" type="button" (click)="showConfirm = !showConfirm">
               <mat-icon>{{ showConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
           </div>
+          <!-- Match / mismatch hint -->
           <span class="match-hint" *ngIf="pwForm.confirmPassword">
-            <mat-icon *ngIf="pwForm.newPassword === pwForm.confirmPassword" class="match-ok">check_circle</mat-icon>
-            <mat-icon *ngIf="pwForm.newPassword !== pwForm.confirmPassword" class="match-err">cancel</mat-icon>
+            <mat-icon *ngIf="pwForm.newPassword === pwForm.confirmPassword" class="match-ok">
+              check_circle
+            </mat-icon>
+            <mat-icon *ngIf="pwForm.newPassword !== pwForm.confirmPassword" class="match-err">
+              cancel
+            </mat-icon>
             {{ pwForm.newPassword === pwForm.confirmPassword ? 'Passwords match' : 'Passwords do not match' }}
           </span>
         </div>
@@ -261,7 +350,7 @@
 
       </div>
 
-      <!-- Account info (read-only, bottom of security tab) -->
+      <!-- Account info (read-only) -->
       <div class="account-info-card">
         <div class="aic-label"><mat-icon>info</mat-icon> Account Information</div>
         <div class="aic-row">

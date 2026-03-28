@@ -13,11 +13,12 @@ $muted-light: #ABA49A;
 $green:       #5DCAA5;
 $blue:        #378ADD;
 $red:         #d46060;
+$orange:      #e0924a;
 $border:      rgba(201, 168, 76, 0.13);
 $border-soft: rgba(201, 168, 76, 0.07);
 $ease:        cubic-bezier(0.4, 0, 0.2, 1);
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Page shell ────────────────────────────────────────────────────────────────
 .docs-page {
   padding: 26px 30px;
   font-family: 'DM Sans', sans-serif;
@@ -25,69 +26,156 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 100%;
 }
 
-// ── Header ────────────────────────────────────────────────────────────────────
+// ── Page header ───────────────────────────────────────────────────────────────
 .page-header {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 1rem; margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 22px;
+  flex-wrap: nowrap;
 }
-.header-left { display: flex; align-items: flex-start; gap: 14px; }
+
+// Cases view: left side is just a plain div with title + sub
+// Documents view: left side is .header-left (back btn + text block)
+.header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
 
 .btn-back {
-  width: 34px; height: 34px; background: rgba($parchment,.05);
-  border: 1px solid rgba($parchment,.1); border-radius: 3px;
-  color: $muted-light; cursor: pointer; flex-shrink: 0; margin-top: 6px;
-  display: flex; align-items: center; justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: rgba($parchment, .05);
+  border: 1px solid rgba($parchment, .1);
+  border-radius: 3px;
+  color: $muted-light;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background .2s $ease, color .2s $ease;
+
   mat-icon { font-size: 18px; width: 18px; height: 18px; }
-  &:hover { background: rgba($gold,.1); color: $gold; border-color: rgba($gold,.2); }
+
+  &:hover {
+    background: rgba($gold, .1);
+    color: $gold;
+    border-color: rgba($gold, .2);
+  }
 }
 
 .breadcrumb {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 0.75rem; color: $muted; margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: $muted;
+  margin-bottom: 4px;
 }
-.bc-root {
-  cursor: pointer;
-  &:hover { color: $gold; }
-}
-.bc-sep  { font-size: 14px; width: 14px; height: 14px; opacity: .5; }
+
+.bc-root    { cursor: pointer; &:hover { color: $gold; } }
+.bc-sep     { font-size: 14px; width: 14px; height: 14px; opacity: .5; }
 .bc-current { color: $gold; font-weight: 600; }
 
 .page-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 2rem; font-weight: 700; color: $parchment; margin: 0 0 4px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: $parchment;
+  margin: 0 0 4px;
 }
-.page-sub { font-size: 0.8rem; color: $muted; margin: 0; }
 
+.page-sub {
+  font-size: 0.8rem;
+  color: $muted;
+  margin: 0;
+}
+
+// Inline separators and pending note inside .page-sub
+.sep          { margin: 0 2px; opacity: .5; }
+.pending-note { color: $orange; font-weight: 500; }
+
+// Cases view: orange alert badge (top-right of header)
+.request-alert {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba($orange, .1);
+  border: 1px solid rgba($orange, .25);
+  border-radius: 3px;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $orange;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+// Upload Document button (header, documents view)
 .btn-upload {
-  display: flex; align-items: center; gap: 6px;
-  background: $gold; color: $ink; border: none; border-radius: 3px;
-  padding: 10px 18px; cursor: pointer; flex-shrink: 0;
-  font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: $gold;
+  color: $ink;
+  border: none;
+  border-radius: 3px;
+  padding: 10px 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
   transition: background .2s $ease;
+
   mat-icon { font-size: 17px; width: 17px; height: 17px; }
   &:hover { background: $gold-light; }
 }
 
-// ── Loading / Error ───────────────────────────────────────────────────────────
+// ── States ────────────────────────────────────────────────────────────────────
 .state-loading {
-  display: flex; align-items: center; gap: 14px;
-  padding: 48px 0; color: $muted; font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 48px 0;
+  color: $muted;
+  font-size: 0.85rem;
+
   ::ng-deep .mat-mdc-progress-spinner circle { stroke: $gold !important; }
 }
+
 .state-error {
-  display: flex; align-items: center; gap: 10px; color: $red;
-  background: rgba(#b83232,.08); border: 1px solid rgba(#b83232,.15);
-  border-radius: 4px; padding: 14px 16px; font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: $red;
+  background: rgba(#b83232, .08);
+  border: 1px solid rgba(#b83232, .15);
+  border-radius: 4px;
+  padding: 14px 16px;
+  font-size: 0.85rem;
 }
+
 .state-empty {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 60px 0; color: $muted; gap: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 0;
+  color: $muted;
+  gap: 12px;
+
   mat-icon { font-size: 40px; width: 40px; height: 40px; opacity: .25; }
   p { font-size: 0.85rem; margin: 0; }
 }
 
-// ── Case cards grid ───────────────────────────────────────────────────────────
+// ── Case cards ────────────────────────────────────────────────────────────────
 .case-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -95,144 +183,948 @@ $ease:        cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .case-card {
-  background: $ink-soft; border: 1px solid $border;
-  border-radius: 6px; padding: 18px 20px; cursor: pointer;
+  background: $ink-soft;
+  border: 1px solid $border;
+  border-radius: 6px;
+  padding: 18px 20px;
+  cursor: pointer;
   transition: border-color .2s $ease, background .2s $ease, transform .15s $ease;
 
   &:hover {
-    border-color: rgba($gold,.35);
-    background: rgba($gold,.04);
+    border-color: rgba($gold, .35);
+    background: rgba($gold, .04);
     transform: translateY(-2px);
     .case-card-arrow { color: $gold; }
   }
+
+  // HTML modifier for cards that have pending requests
+  &--has-request { border-left: 3px solid rgba($orange, .5); }
 }
 
 .case-card-head {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
 }
+
 .case-card-num {
-  font-size: 0.68rem; font-weight: 700; letter-spacing: .07em;
-  color: $gold; background: rgba($gold,.1); border: 1px solid rgba($gold,.2);
-  border-radius: 2px; padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  color: $gold;
+  background: rgba($gold, .1);
+  border: 1px solid rgba($gold, .2);
+  border-radius: 2px;
+  padding: 2px 8px;
 }
+
+// Orange pill with icon inside case card head (HTML: .request-pill)
+.request-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: rgba($orange, .12);
+  color: $orange;
+  border: 1px solid rgba($orange, .25);
+  border-radius: 2px;
+  padding: 2px 8px;
+  white-space: nowrap;
+
+  mat-icon { font-size: 11px; width: 11px; height: 11px; }
+}
+
 .case-card-arrow {
-  color: $muted; font-size: 20px !important;
+  color: $muted;
+  font-size: 20px !important;
   transition: color .2s $ease;
+  margin-left: auto;
 }
 
 .case-card-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.05rem; font-weight: 700; color: $parchment;
-  margin-bottom: 14px; line-height: 1.3;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: $parchment;
+  margin-bottom: 14px;
+  line-height: 1.3;
 }
 
 .case-card-footer {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .case-doc-count {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 0.75rem; color: $muted-light;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: $muted-light;
+
   mat-icon { font-size: 14px; width: 14px; height: 14px; opacity: .6; }
 }
 
 .status-pills { display: flex; gap: 5px; flex-wrap: wrap; }
 
 .sp {
-  font-size: 0.6rem; font-weight: 600; letter-spacing: .06em;
-  text-transform: uppercase; padding: 2px 7px; border-radius: 2px;
-  &--approved { background: rgba($green,.1); color: $green; border: 1px solid rgba($green,.2); }
-  &--rejected { background: rgba($red,.1);   color: $red;   border: 1px solid rgba($red,.2); }
-  &--pending  { background: rgba($gold,.1);  color: $gold;  border: 1px solid rgba($gold,.2); }
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+
+  &--approved { background: rgba($green, .1); color: $green; border: 1px solid rgba($green, .2); }
+  &--rejected { background: rgba($red, .1);   color: $red;   border: 1px solid rgba($red, .2); }
+  &--pending  { background: rgba($gold, .1);  color: $gold;  border: 1px solid rgba($gold, .2); }
 }
 
-// ── Upload panel ──────────────────────────────────────────────────────────────
-.upload-panel {
-  background: $ink-soft; border: 1px solid rgba($gold,.25);
-  border-radius: 6px; padding: 18px 20px; margin-bottom: 18px;
+// ── Upload / fulfill panel ────────────────────────────────────────────────────
+.upload-panel,
+.fulfill-panel {
+  background: $ink-soft;
+  border: 1px solid rgba($gold, .25);
+  border-radius: 6px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
   animation: fadeIn .2s $ease both;
 }
-@keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
 
 .upload-panel-header {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
 }
+
 .upload-panel-title {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 0.82rem; font-weight: 600; color: $gold;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $gold;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+  em { font-style: normal; color: $parchment; }
+}
+
+.upload-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba($green, .08);
+  border: 1px solid rgba($green, .2);
+  color: $green;
+  border-radius: 4px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  margin-bottom: 12px;
+
   mat-icon { font-size: 16px; width: 16px; height: 16px; }
 }
-.upload-success { display: flex; align-items: center; gap: 8px; background: rgba($green,.08); border: 1px solid rgba($green,.2); color: $green; border-radius: 4px; padding: 10px 14px; font-size: 0.82rem; margin-bottom: 12px; mat-icon { font-size: 16px; width: 16px; height: 16px; } }
-.upload-error   { display: flex; align-items: center; gap: 8px; background: rgba(#b83232,.08); border: 1px solid rgba(#b83232,.2); color: $red; border-radius: 4px; padding: 10px 14px; font-size: 0.82rem; margin-bottom: 12px; mat-icon { font-size: 16px; width: 16px; height: 16px; } }
 
-.upload-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
-.form-row { display: flex; flex-direction: column; gap: 5px; }
-.form-row:last-child, .form-row:nth-child(4) { grid-column: 1 / -1; }
-.form-label { font-size: 0.65rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: $muted; }
+.upload-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(#b83232, .08);
+  border: 1px solid rgba(#b83232, .2);
+  color: $red;
+  border-radius: 4px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  margin-bottom: 12px;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+// ── Form elements ─────────────────────────────────────────────────────────────
+.upload-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  &:last-child,
+  &:nth-child(4) { grid-column: 1 / -1; }
+}
+
+.form-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: $muted;
+}
+
 .req { color: $red; }
-.form-input { background: $ink-mid; border: 1px solid $border; border-radius: 3px; padding: 9px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.83rem; color: $parchment; outline: none; transition: border-color .2s $ease; &:focus { border-color: rgba($gold,.4); } &::placeholder { color: $muted; } }
+
+.form-input {
+  background: $ink-mid;
+  border: 1px solid $border;
+  border-radius: 3px;
+  padding: 9px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.83rem;
+  color: $parchment;
+  outline: none;
+  transition: border-color .2s $ease;
+
+  &:focus { border-color: rgba($gold, .4); }
+  &::placeholder { color: $muted; }
+}
+
 .form-textarea { resize: vertical; min-height: 60px; }
-.form-select { cursor: pointer; option { background: $ink-mid; } }
-.file-drop-zone { display: flex; align-items: center; gap: 10px; background: $ink-mid; border: 1px dashed rgba($gold,.25); border-radius: 4px; padding: 14px 16px; cursor: pointer; font-size: 0.8rem; color: $muted; transition: border-color .2s $ease; mat-icon { color: $gold; flex-shrink: 0; } &:hover { border-color: rgba($gold,.4); } }
+
+.form-select {
+  cursor: pointer;
+  option { background: $ink-mid; }
+}
+
+.file-drop-zone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: $ink-mid;
+  border: 1px dashed rgba($gold, .25);
+  border-radius: 4px;
+  padding: 14px 16px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: $muted;
+  transition: border-color .2s $ease;
+
+  mat-icon { color: $gold; flex-shrink: 0; }
+  &:hover { border-color: rgba($gold, .4); }
+}
+
 .file-selected { color: $parchment; font-weight: 500; }
-.form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
-.btn-cancel { background: none; border: 1px solid rgba($parchment,.12); border-radius: 3px; padding: 9px 18px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: $muted; cursor: pointer; &:hover { color: $parchment; border-color: rgba($parchment,.25); } }
-.btn-submit { display: flex; align-items: center; gap: 7px; background: $gold; color: $ink; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; border: none; border-radius: 3px; padding: 9px 20px; cursor: pointer; mat-icon { font-size: 16px; width: 16px; height: 16px; } &:disabled { opacity: .65; cursor: not-allowed; } &:hover:not(:disabled) { background: $gold-light; } }
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.btn-cancel {
+  background: none;
+  border: 1px solid rgba($parchment, .12);
+  border-radius: 3px;
+  padding: 9px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  color: $muted;
+  cursor: pointer;
+
+  &:hover { color: $parchment; border-color: rgba($parchment, .25); }
+}
+
+.btn-submit {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: $gold;
+  color: $ink;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 3px;
+  padding: 9px 20px;
+  cursor: pointer;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  ::ng-deep .mat-mdc-progress-spinner circle { stroke: $ink !important; }
+
+  &:disabled          { opacity: .65; cursor: not-allowed; }
+  &:hover:not(:disabled) { background: $gold-light; }
+}
+
+// ── Tab bar ───────────────────────────────────────────────────────────────────
+// HTML: .tab-bar > .tab-btn [.tab-btn--active] > .tab-count [.tab-count--alert] + .tab-badge
+.tab-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid $border;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 18px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: $muted;
+  transition: color .2s $ease, border-color .2s $ease;
+  margin-bottom: -1px;       // overlap the bar's border-bottom
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; }
+
+  &:hover { color: $parchment; }
+
+  &--active {
+    color: $gold;
+    border-bottom-color: $gold;
+
+    .tab-count {
+      background: rgba($gold, .15);
+      color: $gold;
+    }
+  }
+}
+
+// Count bubble inside tab (e.g. "1")
+.tab-count {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba($parchment, .08);
+  border-radius: 10px;
+  padding: 2px 7px;
+  transition: background .2s $ease, color .2s $ease;
+
+  // Orange tint when there are pending requests
+  &--alert {
+    background: rgba($orange, .15) !important;
+    color: $orange !important;
+    border: 1px solid rgba($orange, .3);
+  }
+}
+
+// "1 pending" text badge after the count — inline orange pill
+.tab-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: $orange;
+  background: rgba($orange, .12);
+  border: 1px solid rgba($orange, .28);
+  border-radius: 10px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
 
 // ── Filter bar ────────────────────────────────────────────────────────────────
-.filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-.search-wrap { display: flex; align-items: center; gap: 8px; background: $ink-soft; border: 1px solid $border; border-radius: 3px; padding: 0 12px; flex: 1; min-width: 200px; }
-.search-icon { font-size: 16px !important; width: 16px !important; height: 16px !important; color: $muted; flex-shrink: 0; }
-.search-input { background: none; border: none; outline: none; font-family: 'DM Sans', sans-serif; font-size: 0.83rem; color: $parchment; flex: 1; padding: 10px 0; &::placeholder { color: $muted; } }
-.clear-btn { background: none; border: none; cursor: pointer; color: $muted; padding: 2px; display: flex; align-items: center; mat-icon { font-size: 15px; width: 15px; height: 15px; } &:hover { color: $parchment; } }
-.filter-select { background: $ink-soft; border: 1px solid $border; border-radius: 3px; padding: 9px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: $muted-light; cursor: pointer; outline: none; option { background: $ink-mid; } }
-.btn-clear-filters { display: flex; align-items: center; gap: 5px; background: rgba($gold,.08); border: 1px solid rgba($gold,.15); border-radius: 3px; padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 600; color: $gold; cursor: pointer; mat-icon { font-size: 14px; width: 14px; height: 14px; } &:hover { background: rgba($gold,.14); } }
-.doc-count-label { font-size: 0.73rem; color: $muted; margin-left: auto; white-space: nowrap; }
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
 
-// ── Layout ────────────────────────────────────────────────────────────────────
-.content-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: $ink-soft;
+  border: 1px solid $border;
+  border-radius: 3px;
+  padding: 0 12px;
+  flex: 1;
+  min-width: 200px;
+}
 
-// ── Doc list ──────────────────────────────────────────────────────────────────
+.search-icon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  color: $muted;
+  flex-shrink: 0;
+}
+
+.search-input {
+  background: none;
+  border: none;
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.83rem;
+  color: $parchment;
+  flex: 1;
+  padding: 10px 0;
+
+  &::placeholder { color: $muted; }
+}
+
+.clear-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $muted;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
+  &:hover { color: $parchment; }
+}
+
+.filter-select {
+  background: $ink-soft;
+  border: 1px solid $border;
+  border-radius: 3px;
+  padding: 9px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  color: $muted-light;
+  cursor: pointer;
+  outline: none;
+
+  option { background: $ink-mid; }
+}
+
+.btn-clear-filters {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba($gold, .08);
+  border: 1px solid rgba($gold, .15);
+  border-radius: 3px;
+  padding: 8px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $gold;
+  cursor: pointer;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  &:hover { background: rgba($gold, .14); }
+}
+
+.doc-count-label {
+  font-size: 0.73rem;
+  color: $muted;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+// ── Two-column layout ─────────────────────────────────────────────────────────
+.content-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+// Left column (HTML: .list-col)
+.list-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+// ── Document list ─────────────────────────────────────────────────────────────
 .doc-list { display: flex; flex-direction: column; gap: 8px; }
-.doc-row { display: flex; align-items: center; gap: 12px; background: $ink-soft; border: 1px solid $border; border-radius: 5px; padding: 14px 16px; cursor: pointer; transition: border-color .2s $ease, background .2s $ease; &:hover { border-color: rgba($gold,.3); background: rgba($gold,.03); .row-arrow { color: $gold; } } &--active { border-color: rgba($gold,.4) !important; background: rgba($gold,.06) !important; } }
 
-.file-icon { width: 38px; height: 38px; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; mat-icon { font-size: 20px; width: 20px; height: 20px; } &.icon--pdf { background: rgba(#b83232,.12); color: $red; border: 1px solid rgba(#b83232,.2); } &.icon--doc { background: rgba($blue,.1); color: $blue; border: 1px solid rgba($blue,.2); } &.icon--xls { background: rgba($green,.1); color: $green; border: 1px solid rgba($green,.2); } &.icon--img { background: rgba($gold,.1); color: $gold; border: 1px solid rgba($gold,.2); } &.icon--file { background: rgba($parchment,.06); color: $muted-light; border: 1px solid $border-soft; } }
+.doc-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: $ink-soft;
+  border: 1px solid $border;
+  border-radius: 5px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color .2s $ease, background .2s $ease;
 
+  .file-icon   { margin-top: 2px; }
+  .doc-actions { margin-top: 1px; }
+
+  &:hover {
+    border-color: rgba($gold, .3);
+    background: rgba($gold, .03);
+    .row-arrow { color: $gold; }
+  }
+
+  &--active { border-color: rgba($gold, .4) !important; background: rgba($gold, .06) !important; }
+}
+
+// ── File icons ────────────────────────────────────────────────────────────────
+.file-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+  &.icon--pdf  { background: rgba(#b83232, .12); color: $red;          border: 1px solid rgba(#b83232, .2); }
+  &.icon--doc  { background: rgba($blue, .1);    color: $blue;         border: 1px solid rgba($blue, .2); }
+  &.icon--xls  { background: rgba($green, .1);   color: $green;        border: 1px solid rgba($green, .2); }
+  &.icon--img  { background: rgba($gold, .1);    color: $gold;         border: 1px solid rgba($gold, .2); }
+  &.icon--file { background: rgba($parchment,.06); color: $muted-light; border: 1px solid $border-soft; }
+}
+
+// ── Doc row info ──────────────────────────────────────────────────────────────
 .doc-info { flex: 1; min-width: 0; }
-.doc-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
-.doc-title { font-size: 0.87rem; font-weight: 600; color: $parchment; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+// Title LEFT, badge RIGHT — the fix for "Court filesAPPROVED" merge
+.doc-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 3px;
+}
+
+.doc-title {
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: $parchment;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
 .doc-filename { font-size: 0.72rem; color: $muted; margin-bottom: 5px; }
-.doc-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.7rem; color: $muted; align-items: center; }
-.meta-icon { font-size: 11px !important; width: 11px !important; height: 11px !important; vertical-align: middle; margin-right: 2px; opacity: .65; }
+
+.doc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.7rem;
+  color: $muted;
+  align-items: center;
+}
+
+.meta-icon {
+  font-size: 11px !important;
+  width: 11px !important;
+  height: 11px !important;
+  vertical-align: middle;
+  margin-right: 2px;
+  opacity: .65;
+}
+
 .doc-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-.row-arrow { color: $muted; font-size: 20px !important; transition: color .2s $ease; }
+.row-arrow   { color: $muted; font-size: 20px !important; transition: color .2s $ease; }
 
 // ── Status badges ─────────────────────────────────────────────────────────────
-.doc-badge { font-size: 0.58rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 2px; flex-shrink: 0; &--lg { font-size: 0.63rem; padding: 4px 10px; } &--uploaded { background: rgba($gold,.1); color: $gold; border: 1px solid rgba($gold,.2); } &--pending { background: rgba($blue,.1); color: $blue; border: 1px solid rgba($blue,.2); } &--approved { background: rgba($green,.1); color: $green; border: 1px solid rgba($green,.2); } &--rejected { background: rgba($red,.1); color: $red; border: 1px solid rgba($red,.2); } &--archived { background: rgba($muted,.1); color: $muted-light; border: 1px solid rgba($muted,.15); } }
+.doc-badge {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  &--lg       { font-size: 0.63rem; padding: 4px 10px; }
+  &--uploaded { background: rgba($gold, .1);   color: $gold;        border: 1px solid rgba($gold, .2); }
+  &--pending  { background: rgba($blue, .1);   color: $blue;        border: 1px solid rgba($blue, .2); }
+  &--approved { background: rgba($green, .1);  color: $green;       border: 1px solid rgba($green, .2); }
+  &--rejected { background: rgba($red, .1);    color: $red;         border: 1px solid rgba($red, .2); }
+  &--archived { background: rgba($muted, .1);  color: $muted-light; border: 1px solid rgba($muted, .15); }
+}
 
 // ── Detail panel ──────────────────────────────────────────────────────────────
-.detail-panel { background: $ink-soft; border: 1px solid $border; border-radius: 6px; padding: 20px 22px; position: sticky; top: 16px; animation: slideIn .2s $ease both; &--empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 60px 22px; border-style: dashed; border-color: rgba($parchment,.08); color: $muted; mat-icon { font-size: 32px; width: 32px; height: 32px; opacity: .25; } p { font-size: 0.82rem; margin: 0; } } }
-@keyframes slideIn { from { opacity:0; transform:translateX(10px); } to { opacity:1; transform:none; } }
+.detail-panel {
+  background: $ink-soft;
+  border: 1px solid $border;
+  border-radius: 6px;
+  padding: 20px 22px;
+  position: sticky;
+  top: 16px;
+  animation: slideIn .2s $ease both;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba($gold, .15) transparent;
 
-.dp-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
-.dp-file-icon { width: 46px; height: 46px; border-radius: 5px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; mat-icon { font-size: 24px; width: 24px; height: 24px; } @extend .file-icon; }
+  &--empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 60px 22px;
+    border-style: dashed;
+    border-color: rgba($parchment, .08);
+    color: $muted;
+
+    mat-icon { font-size: 32px; width: 32px; height: 32px; opacity: .25; }
+    p { font-size: 0.82rem; margin: 0; }
+  }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.dp-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.dp-file-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon { font-size: 24px; width: 24px; height: 24px; }
+
+  @extend .file-icon;
+}
+
 .dp-header-info { flex: 1; min-width: 0; }
-.dp-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; color: $parchment; margin: 0 0 3px; }
-.dp-filename { font-size: 0.72rem; color: $muted; margin-bottom: 8px; }
-.dp-divider { height: 1px; background: $border-soft; margin: 0 0 14px; }
-.dp-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-.dp-meta-item { display: flex; flex-direction: column; gap: 3px; }
-.dp-meta-label { display: flex; align-items: center; gap: 4px; font-size: 0.6rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: $muted; mat-icon { font-size: 12px; width: 12px; height: 12px; opacity: .7; } }
+
+.dp-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: $parchment;
+  margin: 0 0 3px;
+}
+
+.dp-filename    { font-size: 0.72rem; color: $muted; margin-bottom: 8px; }
+.dp-divider     { height: 1px; background: $border-soft; margin: 0 0 14px; }
+
+.dp-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.dp-meta-item   { display: flex; flex-direction: column; gap: 3px; }
+
+.dp-meta-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: $muted;
+
+  mat-icon { font-size: 12px; width: 12px; height: 12px; opacity: .7; }
+}
+
 .dp-meta-value { font-size: 0.83rem; font-weight: 500; color: $parchment; }
-.dp-section-label { display: flex; align-items: center; gap: 6px; font-size: 0.62rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: $gold; margin: 14px 0 8px; mat-icon { font-size: 14px; width: 14px; height: 14px; opacity: .8; } }
-.dp-description { font-size: 0.83rem; color: $muted-light; line-height: 1.7; white-space: pre-wrap; background: $ink-mid; border-left: 2px solid rgba($gold,.35); border-radius: 0 4px 4px 0; padding: 12px 14px; }
-.dp-footer { margin-top: 18px; padding-top: 14px; border-top: 1px solid $border-soft; }
-.btn-download-full { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: rgba($gold,.1); border: 1px solid rgba($gold,.25); border-radius: 4px; padding: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.83rem; font-weight: 600; color: $gold; transition: background .2s $ease; mat-icon { font-size: 17px; width: 17px; height: 17px; } &:hover:not(:disabled) { background: rgba($gold,.18); } &:disabled { opacity: .6; cursor: not-allowed; } }
 
-.icon-btn { width: 30px; height: 30px; background: none; border: none; cursor: pointer; color: $muted; border-radius: 3px; display: flex; align-items: center; justify-content: center; mat-icon { font-size: 18px; width: 18px; height: 18px; } &:hover { color: $parchment; background: rgba($parchment,.06); } &:disabled { opacity: .5; cursor: not-allowed; } }
-.btn-upload-sm { background: none; border: 1px solid rgba($gold,.25); border-radius: 3px; padding: 8px 16px; font-size: 0.78rem; color: $gold; cursor: pointer; font-family: 'DM Sans', sans-serif; &:hover { background: rgba($gold,.08); } }
+.dp-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: $gold;
+  margin: 14px 0 8px;
 
-@media (max-width: 900px) { .content-columns { grid-template-columns: 1fr; } .upload-form { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .case-grid { grid-template-columns: 1fr; } }
-@media (max-width: 600px) { .docs-page { padding: 16px; } .page-header { flex-direction: column; } .dp-meta-grid { grid-template-columns: 1fr; } }
+  mat-icon { font-size: 14px; width: 14px; height: 14px; opacity: .8; }
+}
+
+.dp-description {
+  font-size: 0.83rem;
+  color: $muted-light;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  background: $ink-mid;
+  border-left: 2px solid rgba($gold, .35);
+  border-radius: 0 4px 4px 0;
+  padding: 12px 14px;
+}
+
+.dp-footer {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid $border-soft;
+}
+
+.btn-download-full {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: rgba($gold, .1);
+  border: 1px solid rgba($gold, .25);
+  border-radius: 4px;
+  padding: 11px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: $gold;
+  transition: background .2s $ease;
+
+  mat-icon { font-size: 17px; width: 17px; height: 17px; }
+
+  &:hover:not(:disabled) { background: rgba($gold, .18); }
+  &:disabled             { opacity: .6; cursor: not-allowed; }
+}
+
+// ── Shared utility buttons ────────────────────────────────────────────────────
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $muted;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+  &:hover    { color: $parchment; background: rgba($parchment, .06); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.btn-upload-sm {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid rgba($gold, .25);
+  border-radius: 3px;
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  color: $gold;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+
+  &:hover { background: rgba($gold, .08); }
+}
+
+// ── Requests tab section ──────────────────────────────────────────────────────
+.requests-section { padding-top: 4px; }
+
+.request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+// ── Individual request card ───────────────────────────────────────────────────
+// HTML: .request-card + .request-card--pending / --fulfilled / --cancelled
+.request-card {
+  background: $ink-soft;
+  border: 1px solid $border;
+  border-radius: 6px;
+  padding: 16px 18px;
+  animation: fadeIn .2s $ease both;
+
+  &--pending   { border-left: 3px solid rgba($orange, .5); }
+  &--fulfilled { border-left: 3px solid rgba($green,  .5); }
+  &--cancelled { opacity: .55; }
+}
+
+// ── .req-card-top: main flex row (icon | info) ────────────────────────────────
+// ROOT FIX: this was the missing flex container causing "EvidencePENDING" merge
+.req-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+// Icon bubble
+.req-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba($orange, .1);
+  border: 1px solid rgba($orange, .2);
+  margin-top: 1px;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; color: $orange; }
+
+  .request-card--fulfilled & {
+    background: rgba($green, .1);
+    border-color: rgba($green, .2);
+    mat-icon { color: $green; }
+  }
+
+  .request-card--cancelled & {
+    background: rgba($muted, .08);
+    border-color: rgba($muted, .15);
+    mat-icon { color: $muted-light; }
+  }
+}
+
+// Info column — grows to fill
+.req-info {
+  flex: 1;
+  min-width: 0;
+}
+
+// ── .req-title-row: title LEFT, badge RIGHT ───────────────────────────────────
+// THE critical fix — explicit flex+space-between so badge never runs into title
+.req-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.req-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: $parchment;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+// HTML binding: [ngClass]="requestStatusClass(req.status)"
+// Must return: req-badge--pending / req-badge--fulfilled / req-badge--cancelled
+.req-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  &--pending   { background: rgba($orange, .12); color: $orange;      border: 1px solid rgba($orange, .25); }
+  &--fulfilled { background: rgba($green,  .12); color: $green;       border: 1px solid rgba($green,  .25); }
+  &--cancelled { background: rgba($muted,  .1);  color: $muted-light; border: 1px solid rgba($muted,  .18); }
+}
+
+// Meta row (person + date)
+.req-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.72rem;
+  color: $muted;
+  margin-bottom: 6px;
+
+  .meta-icon {
+    font-size: 11px !important;
+    width: 11px !important;
+    height: 11px !important;
+    opacity: .6;
+    vertical-align: middle;
+    margin-right: 3px;
+  }
+}
+
+// Description text
+.req-desc {
+  font-size: 0.8rem;
+  color: $muted-light;
+  line-height: 1.6;
+  margin-top: 2px;
+}
+
+// Fulfilled document link at bottom of card
+.req-fulfilled-doc {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid $border-soft;
+  font-size: 0.78rem;
+  color: $gold;
+  cursor: pointer;
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; opacity: .8; }
+  &:hover { text-decoration: underline; }
+}
+
+// ── Action row below the request (client can fulfill) ─────────────────────────
+// HTML: .req-card-action > .btn-fulfill
+.req-card-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid $border-soft;
+}
+
+.btn-fulfill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: $gold;
+  color: $ink;
+  border: none;
+  border-radius: 3px;
+  padding: 9px 18px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: background .2s $ease;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  &:hover { background: $gold-light; }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 900px) {
+  .content-columns { grid-template-columns: 1fr; }
+  .upload-form     { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .page-header { flex-wrap: wrap; }
+  .btn-upload  { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 640px) {
+  .case-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .docs-page    { padding: 16px; }
+  .page-header  { flex-direction: column; align-items: flex-start; }
+  .dp-meta-grid { grid-template-columns: 1fr; }
+}

@@ -511,6 +511,92 @@ $ease-out: cubic-bezier(0.0, 0, 0.2, 1);
   border-top: 1px solid $border-soft;
 }
 
+// Compact variant of .modal-card for the confirm dialog
+.modal-card--confirm {
+  max-width: 420px;
+  padding: 2rem 1.75rem 1.75rem;
+  text-align: center;
+}
+ 
+// Trash icon circle at the top
+.confirm-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(#b83232, .08);
+  border: 1px solid rgba(#b83232, .2);
+  color: #d46060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+ 
+.confirm-body { margin-bottom: 1.5rem; }
+ 
+.confirm-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #F5F0E8;
+  margin: 0 0 .75rem;
+}
+ 
+.confirm-message {
+  font-size: .875rem;
+  color: #7A7469;
+  line-height: 1.7;
+  margin: 0;
+ 
+  strong { color: #F5F0E8; font-weight: 600; }
+}
+ 
+.confirm-username {
+  color: #ABA49A;
+  font-size: .82rem;
+}
+ 
+.confirm-warning {
+  display: inline-block;
+  margin-top: .4rem;
+  font-size: .78rem;
+  color: #d46060;
+  font-weight: 500;
+}
+ 
+// Red delete button
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: #b83232;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .65rem 1.4rem;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  transition: background .2s ease, transform .15s ease, box-shadow .2s ease;
+ 
+  &:hover:not(:disabled) {
+    background: #d03030;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(#b83232, .35);
+  }
+ 
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+ 
+// White spinner variant inside the red button
+.spinner-ring--light {
+  border-color: rgba(#fff, .3);
+  border-top-color: #fff;
+}
+
 // ── Keyframes ─────────────────────────────────────────────────────────────────
 @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes modalIn    { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }

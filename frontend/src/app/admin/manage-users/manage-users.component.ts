@@ -20,15 +20,20 @@ export class ManageUsersComponent implements OnInit {
   searchText = '';
   filterRole = '';
 
-  // ── Inline modal state (replaces MatDialog) ──────────────────────────────────
+  // ── Inline modal state ───────────────────────────────────────────────────────
   dialogOpen    = false;
   dialogMode:   'create' | 'edit' = 'create';
   dialogLoading = false;
   editingUser:  any = null;
 
-  userForm!:    FormGroup;
-  isLawyerRole  = false;
-  hideDialogPw  = true;
+  userForm!:   FormGroup;
+  isLawyerRole = false;
+  hideDialogPw = true;
+
+  // ── Delete confirmation state (replaces browser confirm()) ───────────────────
+  deleteConfirmOpen   = false;
+  userToDelete:  any  = null;   // holds the full user object so we can show their name
+  deleteLoading       = false;
 
   constructor(
     private http:     HttpClient,
@@ -69,9 +74,7 @@ export class ManageUsersComponent implements OnInit {
         u.lastName?.toLowerCase().includes(s)  ||
         u.email?.toLowerCase().includes(s)     ||
         u.username?.toLowerCase().includes(s);
-
       const matchesRole = !this.filterRole || u.roles?.includes(this.filterRole);
-
       return matchesSearch && matchesRole;
     });
   }
@@ -99,19 +102,19 @@ export class ManageUsersComponent implements OnInit {
   }
 
   openCreateDialog(): void {
-    this.dialogMode  = 'create';
-    this.editingUser = null;
+    this.dialogMode   = 'create';
+    this.editingUser  = null;
     this.hideDialogPw = true;
     this.buildForm(undefined, 'create');
-    this.dialogOpen  = true;
+    this.dialogOpen   = true;
   }
 
   openEditDialog(user: any): void {
-    this.dialogMode  = 'edit';
-    this.editingUser = user;
+    this.dialogMode   = 'edit';
+    this.editingUser  = user;
     this.hideDialogPw = true;
     this.buildForm(user, 'edit');
-    this.dialogOpen  = true;
+    this.dialogOpen   = true;
   }
 
   closeDialog(): void {
@@ -127,15 +130,53 @@ export class ManageUsersComponent implements OnInit {
       this.userForm.markAllAsTouched();
       return;
     }
-
     const value = { ...this.userForm.value };
     if (!value.password) delete value.password;
-
     if (this.dialogMode === 'create') {
       this.createUser(value);
     } else {
       this.updateUser(this.editingUser.id, value);
     }
+  }
+
+  // ── Delete confirmation (inline — no browser popup) ──────────────────────────
+
+  /** Called when the trash icon is clicked — opens the in-app confirm modal */
+  confirmDelete(user: any): void {
+    this.userToDelete       = user;
+    this.deleteConfirmOpen  = true;
+    this.deleteLoading      = false;
+  }
+
+  /** Called when user clicks "Cancel" inside the confirm modal */
+  cancelDelete(): void {
+    this.deleteConfirmOpen = false;
+    this.userToDelete      = null;
+  }
+
+  /** Called when user clicks "Delete" inside the confirm modal */
+  confirmDeleteExecute(): void {
+    if (!this.userToDelete) return;
+    this.deleteLoading = true;
+
+    this.http.delete(
+      `${environment.apiUrl}/admin/users/${this.userToDelete.id}`,
+      { headers: this.getHeaders() }
+    ).subscribe({
+      next: () => {
+        this.users = this.users.filter(u => u.id !== this.userToDelete.id);
+        this.applyFilter();
+        this.deleteLoading     = false;
+        this.deleteConfirmOpen = false;
+        this.userToDelete      = null;
+        this.snackBar.open('User deleted successfully.', 'Close', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error(err);
+        this.deleteLoading = false;
+        this.snackBar.open('Failed to delete user.', 'Close', { duration: 3000 });
+      }
+    });
   }
 
   // ── CRUD ─────────────────────────────────────────────────────────────────────
@@ -176,19 +217,6 @@ export class ManageUsersComponent implements OnInit {
       });
   }
 
-  deleteUser(id: number): void {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-    this.http.delete(`${environment.apiUrl}/admin/users/${id}`, { headers: this.getHeaders() })
-      .subscribe({
-        next: () => {
-          this.users = this.users.filter(u => u.id !== id);
-          this.applyFilter();
-          this.snackBar.open('User deleted.', 'Close', { duration: 3000 });
-        },
-        error: (err) => console.error(err)
-      });
-  }
-
   toggleStatus(user: any): void {
     const newStatus = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     this.http.put<any>(
@@ -208,16 +236,16 @@ export class ManageUsersComponent implements OnInit {
 
   // ── Display helpers ───────────────────────────────────────────────────────────
   getRoleDisplay(roles: string[]): string {
-    if (!roles?.length)                    return 'Unknown';
-    if (roles.includes('ROLE_ADMIN'))      return 'Admin';
-    if (roles.includes('ROLE_LAWYER'))     return 'Lawyer';
+    if (!roles?.length)                return 'Unknown';
+    if (roles.includes('ROLE_ADMIN'))  return 'Admin';
+    if (roles.includes('ROLE_LAWYER')) return 'Lawyer';
     return 'Client';
   }
 
   getRoleColor(roles: string[]): string {
-    if (!roles?.length)                    return 'default';
-    if (roles.includes('ROLE_ADMIN'))      return 'admin';
-    if (roles.includes('ROLE_LAWYER'))     return 'lawyer';
+    if (!roles?.length)                return 'default';
+    if (roles.includes('ROLE_ADMIN'))  return 'admin';
+    if (roles.includes('ROLE_LAWYER')) return 'lawyer';
     return 'client';
   }
 

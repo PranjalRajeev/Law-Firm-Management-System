@@ -8,38 +8,48 @@ import {
   Validators
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../shared/services/auth.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Custom Validators
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** RFC 5322-inspired email validator — stricter than Angular's built-in */
+/**
+ * Letters-only validator for name fields.
+ * Allows: letters (a–z, A–Z), spaces, hyphens, apostrophes.
+ * Rejects: any digit or other special character.
+ */
+export function lettersOnlyValidator(): ValidatorFn {
+  const NAME_REGEX = /^[a-zA-Z\s'\-]+$/;
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value: string = control.value || '';
+    if (!value) return null; // let required handle empty
+    return NAME_REGEX.test(value) ? null : { lettersOnly: true };
+  };
+}
+
+/** RFC 5322-inspired email validator */
 export function strictEmailValidator(): ValidatorFn {
-  // Allows standard email format: local@domain.tld
-  // - local part: alphanumeric + .!#$%&'*+/=?^_`{|}~- (no leading/trailing/double dots)
-  // - domain: valid hostnames separated by dots, TLD must be 2+ alpha chars
   const EMAIL_REGEX =
     /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
 
   return (control: AbstractControl): ValidationErrors | null => {
     const value: string = (control.value || '').trim();
-    if (!value) return null; // let required validator handle empty
+    if (!value) return null;
 
-    if (!EMAIL_REGEX.test(value))               return { invalidEmail: true };
-    if (value.length > 254)                     return { emailTooLong: true };
+    if (!EMAIL_REGEX.test(value))                     return { invalidEmail: true };
+    if (value.length > 254)                           return { emailTooLong: true };
 
     const [local] = value.split('@');
-    if (local.length > 64)                      return { localPartTooLong: true };
+    if (local.length > 64)                            return { localPartTooLong: true };
     if (local.startsWith('.') || local.endsWith('.')) return { invalidEmail: true };
-    if (local.includes('..'))                   return { invalidEmail: true };
+    if (local.includes('..'))                         return { invalidEmail: true };
 
     return null;
   };
 }
 
-/** Password rules interface — used for the live checklist in the template */
+/** Password rules interface */
 export interface PasswordRules {
   minLength:  boolean;
   hasUpper:   boolean;
@@ -48,25 +58,20 @@ export interface PasswordRules {
   hasSpecial: boolean;
 }
 
-/**
- * Strong password validator.
- * Returns individual error keys so the template can highlight each rule.
- * Rules: min 8 chars, uppercase, lowercase, digit, special character.
- */
+/** Strong password validator */
 export function strongPasswordValidator(): ValidatorFn {
   const SPECIAL = /[!@#$%^&*()\-_=+\[\]{};':",.<>/?\\|`~]/;
 
   return (control: AbstractControl): ValidationErrors | null => {
     const value: string = control.value || '';
-    if (!value) return null; // let required handle empty
+    if (!value) return null;
 
     const errors: ValidationErrors = {};
-
-    if (value.length < 8)         errors['minLength']  = true;
-    if (!/[A-Z]/.test(value))     errors['hasUpper']   = true;
-    if (!/[a-z]/.test(value))     errors['hasLower']   = true;
-    if (!/[0-9]/.test(value))     errors['hasNumeric'] = true;
-    if (!SPECIAL.test(value))     errors['hasSpecial'] = true;
+    if (value.length < 8)     errors['minLength']  = true;
+    if (!/[A-Z]/.test(value)) errors['hasUpper']   = true;
+    if (!/[a-z]/.test(value)) errors['hasLower']   = true;
+    if (!/[0-9]/.test(value)) errors['hasNumeric'] = true;
+    if (!SPECIAL.test(value)) errors['hasSpecial'] = true;
 
     return Object.keys(errors).length ? errors : null;
   };
@@ -82,14 +87,22 @@ export function strongPasswordValidator(): ValidatorFn {
   styleUrls: ['./register.component.scss']
 })
 export class RegisterComponent implements OnInit {
+
   registerForm: FormGroup;
-  hidePassword  = true;
-  isLoading     = false;
-  errorMessage  = '';
+  hidePassword = true;
+  isLoading    = false;
+
+  /** Generic server error shown in the top banner */
+  errorMessage = '';
+
+  /**
+   * Set to true when the API returns 403 (email already registered).
+   * Shown inline under the email field — NOT in a snackBar or browser popup.
+   */
+  emailAlreadyExists = false;
 
   // ── Password intelligence ─────────────────────────────────────────────────
 
-  /** Live rule state for the checklist UI */
   get passwordRules(): PasswordRules {
     const value: string = this.registerForm.get('password')?.value || '';
     const SPECIAL = /[!@#$%^&*()\-_=+\[\]{};':",.<>/?\\|`~]/;
@@ -102,7 +115,6 @@ export class RegisterComponent implements OnInit {
     };
   }
 
-  /** 0–5 strength score (one point per passing rule) */
   get passwordStrength(): number {
     const r = this.passwordRules;
     return [r.minLength, r.hasUpper, r.hasLower, r.hasNumeric, r.hasSpecial]
@@ -129,40 +141,54 @@ export class RegisterComponent implements OnInit {
     }
   }
 
-  /** Only show hints after user starts typing or blurs */
   get showPasswordHints(): boolean {
     const ctrl = this.registerForm.get('password');
     return !!(ctrl?.value?.length > 0) || !!(ctrl?.touched);
   }
 
-  // ── Email helpers ──────────────────────────────────────────────────────────
+  // ── Email helpers ─────────────────────────────────────────────────────────
 
   get emailErrorMessage(): string {
     const ctrl = this.registerForm.get('email');
-    if (ctrl?.hasError('required'))        return 'Email address is required';
-    if (ctrl?.hasError('invalidEmail'))    return 'Enter a valid email address (e.g. name@domain.com)';
-    if (ctrl?.hasError('emailTooLong'))    return 'Email address must not exceed 254 characters';
+    if (ctrl?.hasError('required'))         return 'Email address is required';
+    if (ctrl?.hasError('invalidEmail'))     return 'Enter a valid email address (e.g. name@domain.com)';
+    if (ctrl?.hasError('emailTooLong'))     return 'Email address must not exceed 254 characters';
     if (ctrl?.hasError('localPartTooLong')) return 'The part before @ must not exceed 64 characters';
     return '';
   }
 
-  // ── Constructor ────────────────────────────────────────────────────────────
+  // ── Constructor ───────────────────────────────────────────────────────────
 
   constructor(
     private fb:          FormBuilder,
     private router:      Router,
-    private authService: AuthService,
-    private snackBar:    MatSnackBar
+    private authService: AuthService
+    // ← MatSnackBar intentionally removed: all errors shown in the UI, not popups
   ) {
     this.registerForm = this.fb.group({
-      firstName: ['', [Validators.required, Validators.maxLength(50)]],
-      lastName:  ['', [Validators.required, Validators.maxLength(50)]],
-      username:  ['', [
+
+      // FIX: lettersOnlyValidator added — numbers are now rejected in real-time
+      firstName: ['', [
+        Validators.required,
+        Validators.maxLength(50),
+        lettersOnlyValidator()
+      ]],
+
+      // FIX: lettersOnlyValidator added — numbers are now rejected in real-time
+      lastName: ['', [
+        Validators.required,
+        Validators.maxLength(50),
+        lettersOnlyValidator()
+      ]],
+
+      // Username: letters, numbers, dots, hyphens, underscores — already correct
+      username: ['', [
         Validators.required,
         Validators.minLength(3),
         Validators.maxLength(30),
-        Validators.pattern(/^[a-zA-Z0-9._-]+$/)   // no spaces or special chars
+        Validators.pattern(/^[a-zA-Z0-9._-]+$/)
       ]],
+
       email:    ['', [Validators.required, strictEmailValidator()]],
       password: ['', [Validators.required, strongPasswordValidator()]],
       role:     ['', Validators.required]
@@ -171,27 +197,39 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  // ── Actions ────────────────────────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────────────────────
 
   togglePasswordVisibility(): void {
     this.hidePassword = !this.hidePassword;
   }
 
+  /**
+   * Clear the emailAlreadyExists flag as soon as the user edits the email
+   * field, so the error disappears the moment they start correcting it.
+   */
+  onEmailInput(): void {
+    this.emailAlreadyExists = false;
+    // Also clear the generic banner if it was showing the same issue
+    if (this.errorMessage) this.errorMessage = '';
+  }
+
   onSubmit(): void {
+    // Mark everything touched so all inline errors appear immediately
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
       return;
     }
 
-    this.isLoading    = true;
-    this.errorMessage = '';
+    this.isLoading         = true;
+    this.errorMessage      = '';
+    this.emailAlreadyExists = false;
 
     const v = this.registerForm.value;
 
     const registerData = {
-      firstName:         v.firstName,
-      lastName:          v.lastName,
-      username:          v.username,
+      firstName:         v.firstName.trim(),
+      lastName:          v.lastName.trim(),
+      username:          v.username.trim(),
       email:             (v.email as string).trim().toLowerCase(),
       password:          v.password,
       barNumber:         v.role === 'LAWYER' ? 'PENDING' : null,
@@ -204,15 +242,44 @@ export class RegisterComponent implements OnInit {
     this.authService.register(registerData).subscribe({
       next: () => {
         this.isLoading = false;
-        this.snackBar.open('Registration successful! Please login.', 'Close', { duration: 3000 });
-        this.router.navigate(['/auth/login']);
+        // Navigate to login — success message can be shown there via query param
+        this.router.navigate(['/auth/login'], {
+          queryParams: { registered: 'true' }
+        });
       },
       error: (error) => {
-        this.isLoading    = false;
-        this.errorMessage = error?.error?.message
-          || error?.message
-          || 'Registration failed. Please try again.';
-        this.snackBar.open(this.errorMessage, 'Close', { duration: 5000 });
+        this.isLoading = false;
+        // Temporary: log full error so you can see what the backend returns
+        console.error('Registration error:', error);
+        console.error('Error body:', error?.error);
+
+        // Extract the actual message from wherever the backend puts it
+        const serverMessage: string = (
+          error?.error?.message ||
+          error?.error?.error ||
+          error?.message ||
+          ''
+        ).toLowerCase();
+
+        const isDuplicateEmail =
+          error?.status === 403 ||
+          error?.status === 409 ||
+          error?.status === 500 ||   // ← your backend returns 500 for duplicate email
+          serverMessage.includes('already exists') ||
+          serverMessage.includes('duplicate') ||
+          serverMessage.includes('already registered');
+
+        if (isDuplicateEmail) {
+          // ── Email already exists — show inline under the email field ──────
+          this.emailAlreadyExists = true;
+          this.registerForm.get('email')?.markAsTouched();
+        } else {
+          // ── Any other server error → top banner ───────────────────────────
+          this.errorMessage =
+            error?.error?.message ||
+            error?.message ||
+            'Registration failed. Please try again.';
+        }
       }
     });
   }

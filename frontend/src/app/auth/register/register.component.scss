@@ -496,6 +496,16 @@ $ease-out: cubic-bezier(0.0, 0, 0.2, 1);
   &:hover { color: $gold; }
 }
 
+.text-link.error-link {
+  font-size: .72rem;          // match .lf-error size
+  color: #b83232;             // $error-color
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin-left: .25rem;
+ 
+  &:hover { color: darken(#b83232, 10%); }
+}
+
 // ── Keyframes ─────────────────────────────────────────────────────────────────
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }
